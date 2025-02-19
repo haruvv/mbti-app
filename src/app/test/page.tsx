@@ -51,33 +51,35 @@ export default function TestPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
-      <div className="mb-4">
-        <progress
-          value={currentStep + 1}
-          max={QUESTIONS.length}
-          className="w-full h-2 bg-gray-200 rounded"
-        />
-        <div className="text-right mt-1 text-sm text-gray-600">
-          {currentStep + 1}/{QUESTIONS.length}
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
+      <div className="container mx-auto max-w-2xl">
+        <div className="mb-8">
+          <progress
+            value={currentStep + 1}
+            max={QUESTIONS.length}
+            className="w-full h-3 rounded-full overflow-hidden bg-gray-200"
+          />
+          <div className="text-right mt-2 text-sm text-gray-600 font-medium">
+            {currentStep + 1}/{QUESTIONS.length}
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-6">
-          {QUESTIONS[currentStep].text}
-        </h2>
+        <div className="bg-white p-8 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-semibold mb-8 text-gray-800">
+            {QUESTIONS[currentStep].text}
+          </h2>
 
-        <div className="grid gap-4">
-          {[5, 4, 3, 2, 1].map((score) => (
-            <button
-              key={score}
-              onClick={() => handleAnswer(score)}
-              className="p-3 border rounded hover:bg-gray-50 transition-colors"
-            >
-              {getAnswerLabel(score)}
-            </button>
-          ))}
+          <div className="space-y-3">
+            {[5, 4, 3, 2, 1].map((score) => (
+              <button
+                key={score}
+                onClick={() => handleAnswer(score)}
+                className="w-full p-4 text-left border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-all duration-200"
+              >
+                {getAnswerLabel(score)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
