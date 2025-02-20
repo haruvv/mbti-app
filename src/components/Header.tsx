@@ -23,14 +23,22 @@ export default function Header() {
 
           <nav className="flex items-center gap-4">
             <SignedIn>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "w-10 h-10",
-                  },
-                }}
-              />
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/profile"
+                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  プロフィール
+                </Link>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-10 h-10",
+                    },
+                  }}
+                />
+              </div>
             </SignedIn>
 
             <SignedOut>
