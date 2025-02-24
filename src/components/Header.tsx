@@ -13,6 +13,15 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getUserProfile } from "@/app/_actions/profile";
 import type { UserProfile } from "@/app/_actions/profile";
+import { Button } from "@/components/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 export default function Header() {
   const { user } = useUser();
@@ -28,31 +37,58 @@ export default function Header() {
   }, [user]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 glass-effect z-50">
-      <div className="container mx-auto px-4">
-        <div className="h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600"
-          >
-            MBTI診断
-          </Link>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 max-w-screen-2xl items-center">
+        <div className="relative flex flex-1 items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <Link href="/" className="hidden items-center space-x-2 md:flex">
+              <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
+                MBTI診断
+              </span>
+            </Link>
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <Link href="/test" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      診断を始める
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/about" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      MBTIについて
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
 
           <nav className="flex items-center gap-4">
             <SignedIn>
               <Link
                 href="/profile"
-                className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors"
+                className={cn(
+                  "group flex items-center gap-2 rounded-full border px-4 py-2",
+                  "bg-background/50 hover:bg-accent transition-colors",
+                  "text-sm font-medium text-muted-foreground hover:text-foreground"
+                )}
               >
-                <div className="relative w-8 h-8">
+                <div className="relative size-7 overflow-hidden rounded-full ring-2 ring-background group-hover:ring-foreground/20 transition-all">
                   <Image
                     src={profile?.custom_image_url || user?.imageUrl || ""}
                     alt="プロフィール"
                     fill
-                    className="rounded-full object-cover"
+                    className="object-cover"
                   />
                 </div>
-                <span>
+                <span className="inline-block max-w-[100px] truncate">
                   {profile?.display_name || user?.firstName || "ゲスト"}
                 </span>
               </Link>
@@ -60,8 +96,10 @@ export default function Header() {
                 afterSignOutUrl="/"
                 appearance={{
                   elements: {
-                    avatarBox: "hidden", // Clerkのアバターを非表示
-                    userButtonPopoverCard: "glass-effect",
+                    avatarBox: "hidden",
+                    userButtonPopoverCard:
+                      "shadow-lg rounded-lg border bg-popover p-2",
+                    userButtonPopoverFooter: "hidden",
                   },
                 }}
               />
@@ -69,14 +107,17 @@ export default function Header() {
 
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="px-4 py-2 rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all">
+                <Button variant="ghost" size="sm">
                   ログイン
-                </button>
+                </Button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90 transition-all">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white hover:opacity-90"
+                >
                   新規登録
-                </button>
+                </Button>
               </SignUpButton>
             </SignedOut>
           </nav>
