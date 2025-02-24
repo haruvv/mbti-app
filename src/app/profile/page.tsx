@@ -87,6 +87,90 @@ export default async function ProfilePage() {
               )}
             </div>
 
+            {/* 代表的なMBTIタイプの詳細 */}
+            {latestResult && (
+              <div className="glass-effect p-6 rounded-xl">
+                <div className="space-y-4">
+                  {/* 既存の表示部分 */}
+
+                  {/* 特徴的な性格の追加 */}
+                  <div className="mt-4">
+                    <h4 className="text-lg font-medium text-gray-700 mb-2">
+                      特徴
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {typeDescriptions[latestResult.mbti_type].traits.map(
+                        (trait) => (
+                          <div
+                            key={trait}
+                            className="flex items-center gap-2 text-gray-600"
+                          >
+                            <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                            {trait}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* アドバイスの追加 */}
+                  <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
+                    <h4 className="text-lg font-medium text-indigo-700 mb-2">
+                      アドバイス
+                    </h4>
+                    <p className="text-gray-600">
+                      {typeDescriptions[latestResult.mbti_type].advice}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 自己紹介 */}
+            {profile?.bio && (
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                  自己紹介
+                </h2>
+                <div className="glass-effect p-6 rounded-xl">
+                  <p className="text-gray-700 whitespace-pre-wrap">
+                    {profile.bio}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* お気に入りのタイプ */}
+            {profile?.bookmarked_types &&
+              profile.bookmarked_types.length > 0 && (
+                <div className="mt-8">
+                  <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                    お気に入りのタイプ
+                  </h2>
+                  <div className="glass-effect p-6 rounded-xl">
+                    <div className="flex flex-wrap gap-3">
+                      {profile.bookmarked_types.map((type) => (
+                        <div
+                          key={type}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50/50 border border-indigo-100"
+                        >
+                          <span className="font-mono font-bold text-indigo-600">
+                            {type}
+                          </span>
+                          <span className="text-gray-500 text-sm">
+                            {
+                              typeDescriptions[
+                                type as keyof typeof typeDescriptions
+                              ].title
+                            }
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
             {results && results.length > 1 && (
               <div className="mt-8">
                 <details className="group">

@@ -5,12 +5,18 @@ CREATE TABLE user_profiles (
   display_name TEXT,
   custom_image_url TEXT,
   preferred_mbti VARCHAR(4),
+  bio TEXT, -- 自己紹介文を追加
+  bookmarked_types VARCHAR(4)[], -- お気に入りMBTIタイプの配列を追加
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
 
   -- 制約
   CONSTRAINT valid_mbti_type CHECK (
     preferred_mbti IS NULL OR preferred_mbti ~ '^[EI][NS][TF][JP]$' -- MBTIの形式チェック（例：INTJ）
+  ),
+  CONSTRAINT valid_bookmarked_types CHECK (
+    bookmarked_types IS NULL OR 
+    array_length(bookmarked_types, 1) <= 5 -- 最大5つまでブックマーク可能
   )
 );
 

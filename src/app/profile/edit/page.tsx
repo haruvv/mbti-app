@@ -1,8 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getUserProfile } from "@/app/_actions/profile";
-import { getTestResults } from "@/app/_actions/test";
 import { typeDescriptions } from "@/app/data/mbtiTypes";
+import { getTestResults } from "@/app/_actions/test";
 import { ProfileForm } from "./ProfileForm";
 
 export default async function EditProfilePage() {
@@ -12,18 +12,16 @@ export default async function EditProfilePage() {
   const { data: profile, error: profileError } = await getUserProfile(user.id);
   const { data: results } = await getTestResults();
 
-  // 過去の診断結果からMBTIタイプの選択肢を作成（重複を除去）
-  const mbtiOptions = results
-    ? Array.from(new Set(results.map((result) => result.mbti_type))).map(
-        (type) => ({
-          type,
-          title: typeDescriptions[type].title,
-        })
-      )
-    : [];
+  // 最新の診断結果を取得
+  const latestResult = results && results.length > 0 ? results[0] : null;
+
+  // 全てのMBTIタイプを選択肢として使用
+  const mbtiOptions = Object.entries(typeDescriptions).map(([type, data]) => ({
+    type,
+    title: data.title,
+  }));
 
   if (profileError) {
-    // エラー処理は簡潔に
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
         <div className="container mx-auto max-w-2xl pt-8">
@@ -48,9 +46,12 @@ export default async function EditProfilePage() {
               initialData={{
                 displayName: profile?.display_name || "",
                 imageUrl: profile?.custom_image_url || user.imageUrl,
-                preferredMbti: profile?.preferred_mbti || "",
+                preferredMbti: latestResult?.mbti_type || null,
+                bio: profile?.bio || "",
+                bookmarkedTypes: profile?.bookmarked_types || [],
               }}
               mbtiOptions={mbtiOptions}
+              latestMbtiType={latestResult?.mbti_type || null}
             />
           </div>
         </div>

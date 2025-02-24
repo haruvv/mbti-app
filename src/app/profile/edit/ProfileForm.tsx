@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { typeDescriptions } from "@/app/data/mbtiTypes";
 
 type MBTIOption = {
   type: string;
@@ -23,21 +24,32 @@ type FormData = {
   displayName: string;
   imageUrl: string;
   preferredMbti: string;
+  bio: string;
+  bookmarkedTypes: string[];
+};
+
+type Props = {
+  userId: string;
+  initialData: FormData;
+  mbtiOptions: MBTIOption[];
+  latestMbtiType: string | null;
 };
 
 export function ProfileForm({
   userId,
-  initialData,
+  initialData = {
+    displayName: "",
+    imageUrl: "",
+    preferredMbti: "",
+    bio: "",
+    bookmarkedTypes: [],
+  },
   mbtiOptions = [],
-}: {
-  userId: string;
-  initialData: FormData;
-  mbtiOptions: MBTIOption[];
-}) {
+  latestMbtiType,
+}: Props) {
   const router = useRouter();
   const [formData, setFormData] = useState(initialData);
   const [isLoading, setIsLoading] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // 変更されたフィールドを追跡
   const [changedFields, setChangedFields] = useState<Set<string>>(new Set());
@@ -60,7 +72,9 @@ export function ProfileForm({
       const { success, error } = await updateUserProfile(userId, {
         display_name: formData.displayName,
         custom_image_url: formData.imageUrl,
-        preferred_mbti: formData.preferredMbti,
+        preferred_mbti: formData.preferredMbti || null,
+        bio: formData.bio,
+        bookmarked_types: formData.bookmarkedTypes,
       });
 
       if (!success) throw new Error(error);
@@ -69,6 +83,7 @@ export function ProfileForm({
       router.push("/profile");
       router.refresh();
     } catch (error) {
+      console.error("Error:", error);
       toast.error("更新に失敗しました");
     } finally {
       setIsLoading(false);
@@ -79,6 +94,10 @@ export function ProfileForm({
     setFormData(initialData);
     setChangedFields(new Set());
     toast("変更をリセットしました");
+  };
+
+  const isTypeBookmarked = (type: string) => {
+    return formData.bookmarkedTypes?.includes(type) || false;
   };
 
   return (
@@ -104,9 +123,8 @@ export function ProfileForm({
                 ? "border-indigo-500 bg-indigo-50"
                 : "border-gray-200"
             }`}
-            aria-describedby="name-description"
           />
-          <p id="name-description" className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500">
             他のユーザーに表示される名前です
           </p>
         </div>
@@ -137,7 +155,6 @@ export function ProfileForm({
                   const file = e.target.files?.[0];
                   if (!file) return;
 
-                  // ファイルサイズチェック (2MB)
                   if (file.size > 2 * 1024 * 1024) {
                     toast.error("画像サイズは2MB以下にしてください");
                     return;
@@ -164,78 +181,117 @@ export function ProfileForm({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 詳細設定 */}
-      <div className="border-t pt-6">
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-2"
-        >
-          <span>詳細設定</span>
-          <svg
-            className={`w-5 h-5 transition-transform ${
-              showAdvanced ? "rotate-180" : ""
-            }`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <div>
+          <label
+            htmlFor="bio"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
+            自己紹介
+          </label>
+          <textarea
+            id="bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            rows={4}
+            className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 ${
+              changedFields.has("bio")
+                ? "border-indigo-500 bg-indigo-50"
+                : "border-gray-200"
+            }`}
+            placeholder="あなたのことを教えてください"
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            最大500文字まで入力できます
+          </p>
+        </div>
 
-        {showAdvanced && (
-          <div className="mt-4 space-y-4">
-            <div>
-              <label
-                htmlFor="preferredMbti"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                代表的なMBTIタイプ
-              </label>
-              <Select
-                name="preferredMbti"
-                value={formData.preferredMbti}
-                onValueChange={(value: string) => {
-                  setFormData((prev) => ({ ...prev, preferredMbti: value }));
-                  setChangedFields((prev) =>
-                    new Set(prev).add("preferredMbti")
-                  );
-                }}
-              >
-                <SelectTrigger
-                  className={`w-full ${
-                    changedFields.has("preferredMbti")
-                      ? "border-indigo-500 bg-indigo-50"
-                      : ""
-                  }`}
-                >
-                  <SelectValue placeholder="タイプを選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mbtiOptions.map((option) => (
-                    <SelectItem key={option.type} value={option.type}>
-                      <span className="font-medium">{option.type}</span>
-                      <span className="ml-2 text-gray-500">
-                        - {option.title}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-sm text-gray-500">
-                過去の診断結果から、あなたを最もよく表すタイプを選択できます
+        {/* 代表的なMBTIタイプ（表示のみ） */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            代表的なMBTIタイプ
+          </label>
+          {latestMbtiType ? (
+            <div className="glass-effect p-4 rounded-lg">
+              <div className="flex items-center gap-4">
+                <span className="font-mono text-xl font-bold text-indigo-600">
+                  {latestMbtiType}
+                </span>
+                <span className="text-gray-600">
+                  {typeDescriptions[latestMbtiType].title}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                最新の診断結果が自動的に設定されます
               </p>
             </div>
+          ) : (
+            <div className="glass-effect p-4 rounded-lg bg-gray-50">
+              <p className="text-gray-500">
+                まだ診断を受けていません。
+                <a
+                  href="/test"
+                  className="text-indigo-600 hover:text-indigo-700 ml-2"
+                >
+                  診断を受ける →
+                </a>
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* お気に入りのタイプ選択 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            お気に入りのタイプ
+          </label>
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+            {Object.keys(typeDescriptions).map((type) => (
+              <label
+                key={type}
+                className={`flex items-center justify-center px-2 py-1.5 rounded-lg border cursor-pointer transition-all text-center ${
+                  formData.bookmarkedTypes?.includes(type)
+                    ? "border-indigo-500 bg-indigo-50 text-indigo-600"
+                    : "border-gray-200 hover:bg-gray-50"
+                } ${
+                  !formData.bookmarkedTypes?.includes(type) &&
+                  (formData.bookmarkedTypes?.length || 0) >= 5
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.bookmarkedTypes?.includes(type)}
+                  onChange={(e) => {
+                    const newTypes = e.target.checked
+                      ? [...(formData.bookmarkedTypes || []), type].slice(0, 5)
+                      : (formData.bookmarkedTypes || []).filter(
+                          (t) => t !== type
+                        );
+                    setFormData((prev) => ({
+                      ...prev,
+                      bookmarkedTypes: newTypes,
+                    }));
+                    setChangedFields((prev) =>
+                      new Set(prev).add("bookmarkedTypes")
+                    );
+                  }}
+                  className="hidden"
+                  disabled={
+                    !formData.bookmarkedTypes?.includes(type) &&
+                    (formData.bookmarkedTypes?.length || 0) >= 5
+                  }
+                />
+                <span className="font-mono text-sm">{type}</span>
+              </label>
+            ))}
           </div>
-        )}
+          <p className="mt-2 text-sm text-gray-500">
+            最大5つまで選択: {formData.bookmarkedTypes?.length || 0}/5
+          </p>
+        </div>
       </div>
 
       {/* アクションボタン */}

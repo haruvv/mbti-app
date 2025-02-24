@@ -9,6 +9,8 @@ export type UserProfile = {
   display_name: string | null;
   custom_image_url: string | null;
   preferred_mbti: string | null;
+  bio: string | null;
+  bookmarked_types: string[] | null;
 };
 
 export async function getUserProfile(clerkId: string) {
@@ -94,6 +96,8 @@ export async function updateUserProfile(
         display_name: profile.display_name,
         custom_image_url: profile.custom_image_url,
         preferred_mbti: profile.preferred_mbti,
+        bio: profile.bio,
+        bookmarked_types: profile.bookmarked_types,
       })
       .eq("user_id", user.id)
       .select()
