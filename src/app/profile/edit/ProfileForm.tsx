@@ -102,15 +102,14 @@ export function ProfileForm({
     setIsLoading(true);
 
     try {
-      // handleが変更されていない場合は、updateUserProfileに送信しない
+      // プロフィールデータを正しい形式で準備
       const profileData = {
-        display_name: formData.displayName,
-        custom_image_url: formData.imageUrl,
-        preferred_mbti: formData.preferredMbti || null,
+        displayName: formData.displayName,
+        imageUrl: formData.imageUrl,
+        preferredMbti: formData.preferredMbti || null,
         bio: formData.bio,
-        bookmarked_types: formData.bookmarkedTypes,
-        // handleが変更された場合のみ含める
-        ...(changedFields.has("handle") ? { handle: formData.handle } : {}),
+        bookmarkedTypes: formData.bookmarkedTypes,
+        handle: formData.handle, // handleは常に含める
       };
 
       const { success, error } = await updateUserProfile(userId, profileData);

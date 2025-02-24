@@ -22,7 +22,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import UserSearch from "@/components/UserSearch";
+import { UserSearch } from "@/components/features/search/UserSearch";
 
 export default function Header() {
   const { user } = useUser();
@@ -50,37 +50,25 @@ export default function Header() {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link href="/test" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      診断を始める
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link href="/about" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      MBTIについて
-                    </NavigationMenuLink>
+                  <Link href="/test" className={navigationMenuTriggerStyle()}>
+                    診断する
                   </Link>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
 
+          {/* 検索フォームをヘッダーの中央に配置 */}
           <div className="flex-1 max-w-xl mx-4">
             <UserSearch />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <SignedIn>
               <Link
                 href="/profile"
                 className={cn(
-                  "group flex items-center gap-2 rounded-full border px-4 py-2",
+                  "flex items-center gap-2 rounded-full px-2 py-1 group",
                   "bg-background/50 hover:bg-accent transition-colors",
                   "text-sm font-medium text-muted-foreground hover:text-foreground"
                 )}
