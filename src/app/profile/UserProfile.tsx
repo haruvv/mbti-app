@@ -3,29 +3,21 @@
 import Image from "next/image";
 
 type UserProfileProps = {
-  imageUrl?: string | null;
-  firstName?: string | null;
+  imageUrl: string;
+  name: string;
 };
 
-export function UserProfile({ imageUrl, firstName }: UserProfileProps) {
+export function UserProfile({ imageUrl, name }: UserProfileProps) {
   return (
-    <div className="relative">
-      {imageUrl ? (
-        <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/20 shadow-xl">
-          <Image
-            src={imageUrl}
-            alt={firstName || "ユーザー"}
-            width={80}
-            height={80}
-            className="object-cover"
-          />
-        </div>
-      ) : (
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-2xl font-bold text-white border-4 border-white/20 shadow-xl">
-          {(firstName?.[0] || "U").toUpperCase()}
-        </div>
-      )}
-      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white" />
+    <div className="flex items-center gap-4">
+      <div className="relative w-24 h-24">
+        <Image
+          src={imageUrl}
+          alt={`${name}のプロフィール画像`}
+          fill
+          className="rounded-full border-4 border-white shadow-lg object-cover"
+        />
+      </div>
     </div>
   );
 }
