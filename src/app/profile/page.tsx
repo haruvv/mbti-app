@@ -1,104 +1,95 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { createClerkSupabaseClient } from "@/lib/supabase/client";
+import { redirect } from "next/navigation";
+import { getTestResults } from "../_actions/test";
+import { typeDescriptions } from "../data/mbtiTypes";
+import { UserProfile } from "./UserProfile";
 import { UsernameForm } from "./UsernameForm";
+import { formatDate } from "@/lib/utils";
 
 export default async function ProfilePage() {
   const user = await currentUser();
+  if (!user) redirect("/");
 
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p>ログインが必要です</p>
-      </div>
-    );
-  }
-
-  const supabase = await createClerkSupabaseClient();
-
-  const { data: profile, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("clerk_id", user.id)
-    .single();
-
-  if (error) {
-    console.error("Error fetching profile:", error);
-  }
-
-  const { data: testResults } = await supabase
-    .from("test_results")
-    .select("mbti_type, taken_at")
-    .eq("user_id", profile.id)
-    .order("taken_at", { ascending: false });
+  const { data: results, error } = await getTestResults();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-        <div className="flex items-center space-x-4 mb-6">
-          <img
-            src={user.imageUrl}
-            alt="Profile"
-            className="w-20 h-20 rounded-full"
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">
-                {profile?.username || "ユーザー"}
-              </h1>
-              <UsernameForm
-                clerkId={user.id}
-                currentUsername={profile?.username || ""}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 animate-gradient-x">
+      <div className="container mx-auto max-w-4xl pt-8">
+        <div className="glass-effect rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 relative overflow-hidden">
+            {/* デコレーション要素 */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-24 -translate-x-24" />
+
+            <div className="relative z-10 flex items-center gap-6">
+              <UserProfile
+                imageUrl={user.imageUrl}
+                firstName={user.firstName}
               />
-            </div>
-            <p className="text-gray-600">
-              {user.emailAddresses[0].emailAddress}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="border-t pt-4">
-            <h2 className="text-lg font-semibold mb-2">プロフィール情報</h2>
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-gray-600">ユーザーID</p>
-                <p className="font-mono text-sm">{profile?.clerk_id}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">作成日</p>
-                <p>
-                  {new Date(profile?.created_at).toLocaleDateString("ja-JP")}
-                </p>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  {user.firstName || "ゲスト"}さんのプロフィール
+                </h1>
+                <UsernameForm
+                  clerkId={user.id}
+                  currentUsername={user.username || ""}
+                />
               </div>
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <h2 className="text-lg font-semibold mb-2">アカウント設定</h2>
-            <div className="space-y-2">
-              <button className="text-blue-600 hover:text-blue-800">
-                メールアドレスを変更
-              </button>
-              <button className="text-blue-600 hover:text-blue-800 block">
-                パスワードを変更
-              </button>
-            </div>
-          </div>
+          <div className="p-8">
+            <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+              診断履歴
+            </h2>
 
-          <div className="border-t pt-4">
-            <h2 className="text-lg font-semibold mb-2">診断履歴</h2>
-            <div className="space-y-2">
-              {testResults?.map((result, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <span className="font-mono">{result.mbti_type}</span>
-                  <span className="text-gray-600">
-                    {new Date(result.taken_at).toLocaleDateString("ja-JP")}
-                  </span>
-                </div>
-              ))}
-              {(!testResults || testResults.length === 0) && (
-                <p className="text-gray-600">まだ診断履歴がありません</p>
-              )}
+            {error ? (
+              <div className="bg-red-50 text-red-800 p-4 rounded-xl border border-red-100">
+                エラーが発生しました: {error}
+              </div>
+            ) : results && results.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {results.map((result) => (
+                  <div
+                    key={result.id}
+                    className="glass-effect p-6 rounded-xl hover:shadow-lg transition-all"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-bold text-indigo-600">
+                        {typeDescriptions[result.mbti_type].title}
+                      </h3>
+                      <span className="text-sm text-gray-500">
+                        {formatDate(result.taken_at)}
+                      </span>
+                    </div>
+                    <div className="text-2xl font-bold mb-2 font-mono">
+                      {result.mbti_type}
+                    </div>
+                    <p className="text-gray-600 line-clamp-3">
+                      {typeDescriptions[result.mbti_type].description}
+                    </p>
+                    <a
+                      href={`/result?type=${result.mbti_type}`}
+                      className="mt-4 inline-block text-indigo-600 hover:text-indigo-700 font-medium"
+                    >
+                      詳細を見る →
+                    </a>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                まだ診断結果がありません
+              </div>
+            )}
+
+            <div className="mt-8 flex justify-center">
+              <a
+                href="/test"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+              >
+                新しい診断を始める
+              </a>
             </div>
           </div>
         </div>

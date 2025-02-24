@@ -46,15 +46,19 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-blue-600">
+      <div className="flex items-center gap-2 text-white/90 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
         <LoadingSpinner className="h-4 w-4" />
-        <span className="text-sm">保存中...</span>
+        <span className="text-sm">診断結果を保存中...</span>
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-red-600 text-sm">{error}</div>;
+    return (
+      <div className="bg-red-500/10 backdrop-blur-sm text-red-200 rounded-xl px-4 py-2 border border-red-500/20 text-sm">
+        {error}
+      </div>
+    );
   }
 
   return null;

@@ -1,98 +1,71 @@
-"use client";
-
-import { useState } from "react";
+import { currentUser } from "@clerk/nextjs/server";
+import { QuestionForm } from "./QuestionForm";
 import { QUESTIONS } from "../data/questions";
-import { useRouter } from "next/navigation";
 
-export default function TestPage() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
-
-  const handleAnswer = (score: number) => {
-    const newAnswers = [...answers, score];
-    setAnswers(newAnswers);
-
-    if (currentStep < QUESTIONS.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      const result = calculateMBTI(newAnswers);
-      router.push(`/result?type=${result}`);
-    }
-  };
-
-  const calculateMBTI = (answers: number[]): string => {
-    type DimensionKey = "EI" | "SN" | "TF" | "JP";
-    const dimensions: Record<DimensionKey, { [key: string]: number }> = {
-      EI: { E: 0, I: 0 },
-      SN: { S: 0, N: 0 },
-      TF: { T: 0, F: 0 },
-      JP: { J: 0, P: 0 },
-    };
-
-    answers.forEach((score, index) => {
-      const question = QUESTIONS[index];
-      const value = question.positive ? score - 3 : 3 - score;
-      const dim = question.dimension as DimensionKey;
-
-      if (value > 0) {
-        dimensions[dim][question.dimension[0]] += Math.abs(value);
-      } else {
-        dimensions[dim][question.dimension[1]] += Math.abs(value);
-      }
-    });
-
-    return Object.entries(dimensions)
-      .map(([dim, scores]) => {
-        const [first, second] = Object.entries(scores);
-        return first[1] >= second[1] ? first[0] : second[0];
-      })
-      .join("");
-  };
+export default async function TestPage() {
+  const user = await currentUser();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
-      <div className="container mx-auto max-w-2xl">
-        <div className="mb-8">
-          <progress
-            value={currentStep + 1}
-            max={QUESTIONS.length}
-            className="w-full h-3 rounded-full overflow-hidden bg-gray-200"
-          />
-          <div className="text-right mt-2 text-sm text-gray-600 font-medium">
-            {currentStep + 1}/{QUESTIONS.length}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 animate-gradient-x">
+      <div className="container mx-auto max-w-3xl pt-8">
+        <div className="glass-effect rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 relative overflow-hidden">
+            {/* デコレーション要素 */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-24 -translate-x-24" />
+
+            {/* コンテンツ */}
+            <div className="relative">
+              <h1 className="text-4xl font-bold text-white mb-2">
+                パーソナリティ診断テスト
+              </h1>
+              <p className="text-white/90 text-lg">
+                あなたの回答から最適なタイプを診断します
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-semibold mb-8 text-gray-800">
-            {QUESTIONS[currentStep].text}
-          </h2>
+          <div className="p-8">
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+                <h2 className="text-xl font-bold text-purple-800 mb-3">
+                  ✨ 診断を始める前に
+                </h2>
+                <ul className="space-y-2 text-purple-700">
+                  <li className="flex items-center gap-2">
+                    <span className="text-lg">•</span>
+                    質問は全部で60問あります
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-lg">•</span>
+                    直感的に回答してください
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-lg">•</span>
+                    所要時間は約10分です
+                  </li>
+                </ul>
+              </div>
 
-          <div className="space-y-3">
-            {[5, 4, 3, 2, 1].map((score) => (
-              <button
-                key={score}
-                onClick={() => handleAnswer(score)}
-                className="w-full p-4 text-left border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-all duration-200"
-              >
-                {getAnswerLabel(score)}
-              </button>
-            ))}
+              {user ? (
+                <div className="bg-green-50 rounded-xl p-6 border border-green-100">
+                  <p className="text-green-800">
+                    ログイン済み - 診断結果を保存できます
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-100">
+                  <p className="text-yellow-800">
+                    ログインすると、診断結果を保存できます
+                  </p>
+                </div>
+              )}
+
+              <QuestionForm questions={QUESTIONS} />
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-const getAnswerLabel = (score: number): string => {
-  const labels: { [key: number]: string } = {
-    5: "強く同意する",
-    4: "やや同意する",
-    3: "どちらとも言えない",
-    2: "やや反対する",
-    1: "強く反対する",
-  };
-  return labels[score];
-};
