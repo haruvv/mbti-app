@@ -25,6 +25,12 @@ export default async function ProfilePage() {
     console.error("Error fetching profile:", error);
   }
 
+  const { data: testResults } = await supabase
+    .from("test_results")
+    .select("mbti_type, taken_at")
+    .eq("user_id", profile.id)
+    .order("taken_at", { ascending: false });
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
@@ -76,6 +82,23 @@ export default async function ProfilePage() {
               <button className="text-blue-600 hover:text-blue-800 block">
                 パスワードを変更
               </button>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h2 className="text-lg font-semibold mb-2">診断履歴</h2>
+            <div className="space-y-2">
+              {testResults?.map((result, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <span className="font-mono">{result.mbti_type}</span>
+                  <span className="text-gray-600">
+                    {new Date(result.taken_at).toLocaleDateString("ja-JP")}
+                  </span>
+                </div>
+              ))}
+              {(!testResults || testResults.length === 0) && (
+                <p className="text-gray-600">まだ診断履歴がありません</p>
+              )}
             </div>
           </div>
         </div>

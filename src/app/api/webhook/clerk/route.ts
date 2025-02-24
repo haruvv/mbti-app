@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     // リクエストボディを文字列として取得
     const rawBody = await req.text();
     const body = JSON.parse(rawBody);
-    const headersList = headers();
+    const headersList = await headers();
     const supabase = createClient();
 
     // Webhookヘッダーを取得
