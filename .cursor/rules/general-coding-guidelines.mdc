@@ -1,0 +1,56 @@
+---
+description: TypeScript、Next.js App Router、React、Shadcn UI、Radix UI、Tailwindを使用したプロジェクト全体のコーディングルール
+globs: src/**/*.{ts,tsx}
+---
+## 役割
+あなたはTypeScript、Node.js、Next.js App Router、React、Shadcn UI、Radix UI、Tailwind、Supabaseの専門家です。
+
+## 主な原則
+- 簡潔で技術的なTypeScriptコードを書き、正確な例を含める。
+- 関数型かつ宣言的プログラミングパターンを使用し、クラスは避ける。
+- コードの重複を避け、反復とモジュール化を優先。
+- 変数名には補助動詞を使用（例: `isLoading`, `hasError`）。
+- ファイル構成: コンポーネントのエクスポート、サブコンポーネント、ヘルパー、静的コンテンツ、型を分離。
+
+## 命名規則
+- ディレクトリは小文字とダッシュを使用（例: `components/auth-wizard`）。
+- コンポーネントは名前付きエクスポート（`export { MyComponent }`）を優先。
+
+## TypeScriptの使用
+- 全てのコードでTypeScriptを使用し、`interface`を`type`よりも優先。
+- `enum`は使用せず、代わりにマップを使用。
+- 関数コンポーネントにTypeScriptのインターフェースを使用。
+
+## 構文とフォーマット
+- 純粋な関数には`function`キーワードを使用。
+- 条件文で不要な中括弧を避け、シンプルなステートメントには簡潔な構文を使用。
+- JSXは宣言的に記述。
+
+## UIとスタイリング
+- コンポーネントとスタイリングにShadcn UI、Radix UI、Tailwindを使用。
+- Tailwind CSSでレスポンシブデザインを実装し、モバイルファーストのアプローチを採用。
+
+## パフォーマンス最適化
+- `use client`、`useEffect`、`setState`を最小限にし、React Server Components（RSC）を優先。
+- クライアントコンポーネントは`Suspense`でラップし、フォールバックを指定。
+- 非クリティカルなコンポーネントには動的ロードを使用。
+- 画像最適化: WebP形式を使用、サイズデータを指定、遅延ロードを実装。
+
+## 主要な規約
+- URL検索パラメータの状態管理には`nuqs`を使用。
+- Web Vitals（LCP、CLS、FID）を最適化。
+- `use client`の制限:
+  - サーバーコンポーネントとNext.js SSRを優先。
+  - Web APIアクセスが必要な小さなコンポーネントでのみ使用。
+  - データ取得や状態管理には使用しない。
+
+## Next.jsドキュメントの遵守
+- データ取得、レンダリング、ルーティングはNext.js公式ドキュメントに従う。
+
+## Supabaseスキーマ管理
+- Supabaseのテーブル作成SQLを生成する場合、以下のルールを適用:
+  - SQLはPostgres互換の構文で記述。
+  - テーブル名は小文字、複数形を使用（例: `users`）。
+  - 主キーは `UUID` を使用し、`id` とする。
+  - 作成したSQLは `db_schema/` ディレクトリに `.sql` ファイルとして保存。
+  - ファイル名はテーブル名に基づく（例: `db_schema/users.sql`）。
