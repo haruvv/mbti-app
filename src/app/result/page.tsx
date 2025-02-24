@@ -19,7 +19,6 @@ export default async function ResultPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
-      {user && <SaveResult mbtiType={mbtiType} />}
       <div className="container mx-auto max-w-2xl pt-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="bg-blue-600 p-6 text-white">
@@ -40,6 +39,11 @@ export default async function ResultPage({
                 </div>
               ))}
             </div>
+            {user && (
+              <div className="mt-4">
+                <SaveResult mbtiType={mbtiType} />
+              </div>
+            )}
           </div>
 
           <div className="p-6">
