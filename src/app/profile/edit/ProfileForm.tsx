@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { updateUserProfile } from "@/app/_actions/profile";
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { typeDescriptions } from "@/app/data/mbtiTypes";
+import { createClient } from "@/lib/supabase/client";
 
 type MBTIOption = {
   type: string;
@@ -26,6 +27,7 @@ type FormData = {
   preferredMbti: string;
   bio: string;
   bookmarkedTypes: string[];
+  handle: string;
 };
 
 type Props = {
@@ -43,6 +45,7 @@ export function ProfileForm({
     preferredMbti: "",
     bio: "",
     bookmarkedTypes: [],
+    handle: "",
   },
   mbtiOptions = [],
   latestMbtiType,
@@ -53,6 +56,36 @@ export function ProfileForm({
 
   // 変更されたフィールドを追跡
   const [changedFields, setChangedFields] = useState<Set<string>>(new Set());
+
+  const [isHandleDisabled, setIsHandleDisabled] = useState(false);
+
+  // コンポーネントのマウント時に制限をチェック
+  useEffect(() => {
+    const checkHandleRestriction = async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("users")
+          .select("handle_updated_at")
+          .eq("clerk_id", userId)
+          .single();
+
+        if (data?.handle_updated_at) {
+          const lastUpdate = new Date(data.handle_updated_at);
+          const daysSinceLastUpdate =
+            (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+
+          if (daysSinceLastUpdate < 14) {
+            setIsHandleDisabled(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking handle restriction:", error);
+      }
+    };
+
+    checkHandleRestriction();
+  }, [userId]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -69,15 +102,23 @@ export function ProfileForm({
     setIsLoading(true);
 
     try {
-      const { success, error } = await updateUserProfile(userId, {
+      // handleが変更されていない場合は、updateUserProfileに送信しない
+      const profileData = {
         display_name: formData.displayName,
         custom_image_url: formData.imageUrl,
         preferred_mbti: formData.preferredMbti || null,
         bio: formData.bio,
         bookmarked_types: formData.bookmarkedTypes,
-      });
+        // handleが変更された場合のみ含める
+        ...(changedFields.has("handle") ? { handle: formData.handle } : {}),
+      };
 
-      if (!success) throw new Error(error);
+      const { success, error } = await updateUserProfile(userId, profileData);
+
+      if (!success) {
+        toast.error(error);
+        return;
+      }
 
       toast.success("プロフィールを更新しました");
       router.push("/profile");
@@ -104,6 +145,49 @@ export function ProfileForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* 基本プロフィール */}
       <div className="space-y-4">
+        <div>
+          <label
+            htmlFor="handle"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            ユニークID
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-2 text-gray-500">@</span>
+            <input
+              type="text"
+              id="handle"
+              name="handle"
+              value={formData.handle}
+              onChange={handleChange}
+              disabled={isHandleDisabled}
+              pattern="^[a-z0-9_]{1,15}$"
+              className={`w-full pl-8 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 ${
+                isHandleDisabled
+                  ? "bg-gray-100 cursor-not-allowed"
+                  : changedFields.has("handle")
+                    ? "border-indigo-500 bg-indigo-50"
+                    : "border-gray-200"
+              }`}
+              placeholder="johndoe"
+            />
+          </div>
+          <div className="mt-1 space-y-1">
+            <p className="text-sm text-gray-500">
+              英小文字、数字、アンダースコア(_)のみ使用可能。最大15文字まで
+            </p>
+            {isHandleDisabled ? (
+              <p className="text-sm text-amber-600">
+                ※ ユニークIDは前回の変更から14日間経過後に再度変更可能になります
+              </p>
+            ) : (
+              <p className="text-sm text-amber-600">
+                ※ ユニークIDは変更後14日間は再度変更できません
+              </p>
+            )}
+          </div>
+        </div>
+
         <div>
           <label
             htmlFor="displayName"

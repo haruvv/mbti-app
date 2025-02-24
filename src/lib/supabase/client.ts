@@ -1,19 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
-import { auth } from "@clerk/nextjs/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-export async function createClerkSupabaseClient() {
-  const { getToken } = await auth();
-  const supabaseToken = await getToken({ template: "supabase" });
+export const createClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${supabaseToken}`,
-        },
-      },
-    }
-  );
-}
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
+};

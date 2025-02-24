@@ -11,6 +11,7 @@ export type UserProfile = {
   preferred_mbti: string | null;
   bio: string | null;
   bookmarked_types: string[] | null;
+  handle: string | null;
 };
 
 export async function getUserProfile(clerkId: string) {
@@ -79,6 +80,47 @@ export async function updateUserProfile(
 ) {
   try {
     const supabase = createClient();
+
+    if (profile.handle !== undefined) {
+      const { data: currentUser, error: fetchError } = await supabase
+        .from("users")
+        .select("handle, handle_updated_at")
+        .eq("clerk_id", clerkId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (currentUser.handle_updated_at) {
+        const lastUpdate = new Date(currentUser.handle_updated_at);
+        const daysSinceLastUpdate =
+          (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (daysSinceLastUpdate < 14) {
+          return {
+            success: false,
+            error: `ユニークIDは14日間に1回しか変更できません。残り${Math.ceil(14 - daysSinceLastUpdate)}日後に変更可能になります。`,
+          };
+        }
+      }
+
+      const { error: handleError } = await supabase
+        .from("users")
+        .update({
+          handle: profile.handle,
+          handle_updated_at: new Date().toISOString(),
+        })
+        .eq("clerk_id", clerkId);
+
+      if (handleError) {
+        if (handleError.code === "23505") {
+          return {
+            success: false,
+            error: "このユニークIDは既に使用されています",
+          };
+        }
+        throw handleError;
+      }
+    }
 
     const { data: user } = await supabase
       .from("users")

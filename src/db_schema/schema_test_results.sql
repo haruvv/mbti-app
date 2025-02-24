@@ -1,3 +1,15 @@
+-- 一時テーブルに既存のデータをバックアップ
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'test_results') THEN
+        CREATE TEMP TABLE test_results_backup AS SELECT * FROM test_results;
+    END IF;
+END
+$$;
+
+-- 既存のテーブルを削除
+DROP TABLE IF EXISTS test_results CASCADE;
+
 -- 診断結果テーブルの作成
 CREATE TABLE test_results (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -10,6 +22,22 @@ CREATE TABLE test_results (
     mbti_type ~ '^[EI][NS][TF][JP]$' -- MBTIの形式チェック（例：INTJ）
   )
 );
+
+-- バックアップからデータを復元
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'pg_temp' AND tablename = 'test_results_backup') THEN
+        INSERT INTO test_results (
+            id, user_id, mbti_type, taken_at
+        )
+        SELECT 
+            id, user_id, mbti_type, taken_at
+        FROM test_results_backup;
+        
+        DROP TABLE test_results_backup;
+    END IF;
+END
+$$;
 
 -- インデックスの作成
 CREATE INDEX idx_test_results_user_id ON test_results(user_id);

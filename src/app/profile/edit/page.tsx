@@ -4,6 +4,7 @@ import { getUserProfile } from "@/app/_actions/profile";
 import { typeDescriptions } from "@/app/data/mbtiTypes";
 import { getTestResults } from "@/app/_actions/test";
 import { ProfileForm } from "./ProfileForm";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function EditProfilePage() {
   const user = await currentUser();
@@ -20,6 +21,14 @@ export default async function EditProfilePage() {
     type,
     title: data.title,
   }));
+
+  // getUserProfileの呼び出し後に、usersテーブルからhandleも取得
+  const supabase = createClient();
+  const { data: userData } = await supabase
+    .from("users")
+    .select("handle")
+    .eq("clerk_id", user.id)
+    .single();
 
   if (profileError) {
     return (
@@ -49,6 +58,7 @@ export default async function EditProfilePage() {
                 preferredMbti: latestResult?.mbti_type || null,
                 bio: profile?.bio || "",
                 bookmarkedTypes: profile?.bookmarked_types || [],
+                handle: userData?.handle || "",
               }}
               mbtiOptions={mbtiOptions}
               latestMbtiType={latestResult?.mbti_type || null}
