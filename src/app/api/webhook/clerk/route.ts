@@ -1,6 +1,7 @@
 import { Webhook } from "svix";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
+import { WebhookEvent } from "@clerk/nextjs/server";
 
 export async function POST(req: Request) {
   console.log("Webhook received");
@@ -9,7 +10,7 @@ export async function POST(req: Request) {
     // リクエストボディを文字列として取得
     const rawBody = await req.text();
     const body = JSON.parse(rawBody);
-    const headersList = await headers();
+    const headersList = headers();
     const supabase = createClient();
 
     // Webhookヘッダーを取得
@@ -43,39 +44,52 @@ export async function POST(req: Request) {
     console.log("Webhook raw body:", rawBody);
 
     const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    const payload = (await wh.verify(rawBody, {
+    const evt = (await wh.verify(rawBody, {
       "svix-id": svixId,
       "svix-timestamp": svixTimestamp,
       "svix-signature": svixSignature,
-    })) as any;
+    })) as WebhookEvent;
 
-    console.log("Webhook event type:", payload.type);
-    console.log("Webhook payload:", {
-      id: payload.data?.id,
-      email: payload.data?.email_addresses?.[0]?.email_address,
-      username: payload.data?.username,
-    });
+    console.log("Webhook event type:", evt.type);
 
-    if (payload.type === "user.created") {
-      const { id, email_addresses, username } = payload.data;
-      const email = email_addresses[0].email_address;
+    if (evt.type === "user.created" || evt.type === "user.updated") {
+      const { id, email_addresses, first_name, last_name } = evt.data;
+      const primaryEmail = email_addresses.find(
+        (email) => email.id === evt.data.primary_email_address_id
+      )?.email_address;
 
-      const { data, error } = await supabase
-        .from("users")
-        .insert({ clerk_id: id, email, username })
-        .select()
-        .single();
+      if (!primaryEmail) {
+        console.error("No primary email found");
+        return Response.json(
+          { success: false, error: "No primary email found" },
+          { status: 400 }
+        );
+      }
+
+      // トランザクションを使用してユーザーとプロフィールを作成
+      const { data, error } = await supabase.rpc("create_user_with_profile", {
+        p_clerk_id: id,
+        p_email: primaryEmail,
+        p_display_name:
+          [first_name, last_name].filter(Boolean).join(" ") || null,
+      });
 
       if (error) {
         console.error("Supabase insert error:", error);
-        throw error;
+        return Response.json(
+          { success: false, error: error.message },
+          { status: 500 }
+        );
       }
 
-      console.log("User successfully inserted:", data);
+      console.log("User and profile successfully created:", data);
       return Response.json({ success: true, data });
     }
 
-    return Response.json({ success: true, message: "Non-user.created event" });
+    return Response.json({
+      success: true,
+      message: "Non-user event processed",
+    });
   } catch (err) {
     console.error("Webhook error:", err);
     return Response.json(

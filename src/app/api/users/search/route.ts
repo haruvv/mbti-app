@@ -15,9 +15,10 @@ export async function GET(request: Request) {
     .from("users")
     .select(
       `
+      id,
       handle,
       display_name,
-      user_profiles (
+      user_profiles!left (
         display_name,
         custom_image_url
       )
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
     .from("users")
     .select(
       `
+      id,
       handle,
       display_name,
       user_profiles!inner (

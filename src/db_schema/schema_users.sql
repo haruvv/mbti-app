@@ -34,7 +34,7 @@ CREATE TABLE users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
 
     CONSTRAINT valid_handle CHECK (
-        handle ~ '^[a-z0_9]{1,15}$'
+        handle ~ '^[a-z0-9_]{1,15}$'
     )
 );
 

@@ -108,46 +108,57 @@ export async function updateUserProfile(
     return { error: "ユーザー情報の取得に失敗しました" };
   }
 
-  // トランザクション的に両方のテーブルを更新
-  // 1. まずusersテーブルを更新
-  const { error: userUpdateError } = await supabase
-    .from("users")
-    .update({
-      handle: data.handle,
-      display_name: data.displayName, // usersテーブルのdisplay_nameを更新
-    })
-    .eq("clerk_id", clerkId);
+  try {
+    // 1. まずhandleを更新（update_user_handle関数を使用）
+    if (data.handle) {
+      const { error: handleError } = await supabase.rpc("update_user_handle", {
+        p_user_id: userData.id,
+        p_new_handle: data.handle,
+      });
 
-  if (userUpdateError) {
-    console.error("User update error:", userUpdateError);
-    return { error: "ユーザー情報の更新に失敗しました" };
-  }
+      if (handleError) {
+        const errorMessage =
+          {
+            "Handle update not allowed":
+              "ユーザーIDは14日間に1度しか変更できません",
+            "Handle already taken": "このユーザーIDは既に使用されています",
+            "Invalid handle format":
+              "ユーザーIDは1-15文字の半角英数字と_のみ使用できます",
+          }[handleError.message] || handleError.message;
 
-  // 2. 次にuser_profilesテーブルを更新
-  const { data: profile, error: profileError } = await supabase
-    .from("user_profiles")
-    .update({
-      display_name: data.displayName, // user_profilesテーブルのdisplay_nameを更新
-      custom_image_url: data.imageUrl,
-      preferred_mbti: data.preferredMbti,
-      bio: data.bio,
-      bookmarked_types: data.bookmarkedTypes,
-    })
-    .eq("user_id", userData.id)
-    .select()
-    .single();
+        return { error: errorMessage };
+      }
+    }
 
-  if (profileError) {
-    console.error("Profile update error:", profileError);
+    // 2. 次にuser_profilesテーブルを更新
+    const { data: profile, error: profileError } = await supabase
+      .from("user_profiles")
+      .update({
+        display_name: data.displayName,
+        custom_image_url: data.imageUrl,
+        preferred_mbti: data.preferredMbti,
+        bio: data.bio,
+        bookmarked_types: data.bookmarkedTypes,
+      })
+      .eq("user_id", userData.id)
+      .select()
+      .single();
+
+    if (profileError) {
+      console.error("Profile update error:", profileError);
+      return { error: "プロフィールの更新に失敗しました" };
+    }
+
+    // キャッシュを更新
+    revalidatePath("/profile");
+    revalidatePath(`/profile/${data.handle}`);
+
+    return {
+      success: true,
+      data: profile,
+    };
+  } catch (error) {
+    console.error("Update error:", error);
     return { error: "プロフィールの更新に失敗しました" };
   }
-
-  // キャッシュを更新
-  revalidatePath("/profile");
-  revalidatePath(`/profile/${data.handle}`);
-
-  return {
-    success: true,
-    data: profile,
-  };
 }

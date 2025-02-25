@@ -7,12 +7,14 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 type SearchResult = {
+  id: string;
   handle: string;
   display_name: string | null;
   user_profiles: {
     display_name: string | null;
     custom_image_url: string | null;
-  } | null;
+  };
+  is_following?: boolean;
 };
 
 export function UserSearch() {
@@ -54,18 +56,14 @@ export function UserSearch() {
   };
 
   // 表示名を取得するヘルパー関数
-  const getDisplayName = (user: SearchResult) => {
-    // user_profilesのdisplay_nameを優先
-    if (user.user_profiles?.display_name) {
-      return user.user_profiles.display_name;
-    }
-    // usersテーブルのdisplay_nameを次に確認
-    if (user.display_name) {
-      return user.display_name;
-    }
-    // どちらもない場合は"名称未設定"
-    return "名称未設定";
-  };
+  function getDisplayName(user: SearchResult): string {
+    return (
+      user.user_profiles?.display_name ||
+      user.display_name ||
+      `@${user.handle}` ||
+      "Unknown User"
+    );
+  }
 
   return (
     <div className="relative">
