@@ -247,11 +247,11 @@ function FeatureCard({
 // タイプカードコンポーネント
 function MbtiTypeCard({ code, name }: { code: string; name: string }) {
   return (
-    <Link href={`/types/${code.toLowerCase()}`}>
-      <div className="border rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer text-center">
-        <p className="text-lg font-bold text-blue-600">{code}</p>
-        <p className="text-sm text-gray-700">{name}</p>
-      </div>
+    <Link
+      href={`/types/${code.toLowerCase()}`}
+      className="group transition-transform hover:-translate-y-1"
+    >
+      <TypeCard type={code} title={name} />
     </Link>
   );
 }

@@ -2,7 +2,7 @@ import { typeDescriptions } from "../data/mbtiTypes";
 import { TypeCard } from "@/components/features/mbti/TypeCard";
 import Link from "next/link";
 
-export default function ExplorePage() {
+export default function TypesPage() {
   // MBTIタイプのグループ
   const groups = {
     analysts: ["INTJ", "INTP", "ENTJ", "ENTP"],

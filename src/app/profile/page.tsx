@@ -294,7 +294,7 @@ export default async function ProfilePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {testResults.slice(1, 5).map((result) => (
                       <Link
-                        href={`/test/history/${result.id}`}
+                        href={`/types/${result.mbti_type.toLowerCase()}`}
                         key={result.id}
                         className="border rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
                       >

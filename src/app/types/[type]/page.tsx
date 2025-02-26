@@ -24,7 +24,7 @@ export default async function TypePage({
       <div className="container mx-auto max-w-4xl pt-8 pb-16">
         <div className="mb-6">
           <Link
-            href="/explore"
+            href="/types"
             className="inline-flex items-center text-indigo-600 hover:text-indigo-700"
           >
             ← タイプ一覧に戻る
