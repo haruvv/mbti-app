@@ -91,16 +91,16 @@ BEGIN
             USING HINT = 'You can only update your handle once every 14 days';
     END IF;
 
-    -- ハンドルの更新
-    UPDATE users
+    -- ハンドルの更新（user_profilesテーブルに修正）
+    UPDATE user_profiles
     SET 
         handle = p_new_handle,
         handle_updated_at = TIMEZONE('utc'::text, NOW()),
         updated_at = TIMEZONE('utc'::text, NOW())
     WHERE 
-        id = p_user_id
+        user_id = p_user_id
     RETURNING json_build_object(
-        'user_id', id,
+        'user_id', user_id,
         'handle', handle,
         'handle_updated_at', handle_updated_at
     ) INTO v_result;
@@ -424,5 +424,60 @@ BEGIN
         'user_mbti', v_mbti,
         'compatible_types', v_compatible_types
     );
+END;
+$$;
+
+-- 古い関数を削除
+DROP FUNCTION IF EXISTS save_test_result(UUID, TEXT, JSONB);
+
+-- 新しい関数に引数のデフォルト値を設定
+CREATE OR REPLACE FUNCTION save_test_result(
+    p_user_id UUID,
+    p_mbti_type TEXT,
+    p_answers JSONB DEFAULT '{}',
+    p_e_score INTEGER DEFAULT 0,
+    p_n_score INTEGER DEFAULT 0,
+    p_f_score INTEGER DEFAULT 0,
+    p_p_score INTEGER DEFAULT 0
+)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_result_id UUID;
+    v_result json;
+BEGIN
+    -- MBTIタイプの形式チェック
+    IF p_mbti_type !~ '^[EI][NS][TF][JP]$' THEN
+        RAISE EXCEPTION 'Invalid MBTI type format';
+    END IF;
+
+    -- 診断結果の保存
+    INSERT INTO test_results (
+        user_id,
+        mbti_type,
+        answers,
+        created_at
+    )
+    VALUES (
+        p_user_id,
+        p_mbti_type,
+        p_answers,
+        TIMEZONE('utc'::text, NOW())
+    )
+    RETURNING id INTO v_result_id;
+
+    -- 結果を返す
+    SELECT json_build_object(
+        'result_id', v_result_id,
+        'user_id', user_id,
+        'mbti_type', mbti_type,
+        'created_at', created_at
+    ) INTO v_result
+    FROM test_results
+    WHERE id = v_result_id;
+
+    RETURN v_result;
 END;
 $$; 

@@ -5,7 +5,8 @@ import { saveTestResult } from "../_actions/test";
 import type { MBTITypeKey } from "../data/mbtiTypes";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 
 export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
   const [error, setError] = useState<string | null>(null);
@@ -13,14 +14,30 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
   const [isSaved, setIsSaved] = useState(false);
   const saveAttemptedRef = useRef(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const isNewResult = searchParams.get("from") === "test";
 
   useEffect(() => {
-    // ローカルストレージをチェックして、既に保存済みかどうかを確認
-    const storageKey = `mbti_saved_${mbtiType}`;
+    const resultId = isNewResult
+      ? uuidv4()
+      : searchParams.get("resultId") || "unknown";
+
+    const storageKey = `mbti_result_${resultId}`;
     const alreadySaved = localStorage.getItem(storageKey);
 
-    if (alreadySaved) {
+    console.log("ストレージキー:", storageKey);
+    console.log("新規テスト結果:", isNewResult);
+    console.log("保存済みフラグ:", alreadySaved);
+
+    if (alreadySaved === "true") {
+      console.log("保存済みと判定");
       setIsSaved(true);
+      return;
+    }
+
+    if (!isNewResult) {
+      console.log("新規テスト結果ではないため保存しない");
       return;
     }
 
@@ -34,7 +51,9 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
         const formData = new FormData();
         formData.append("mbtiType", mbtiType);
 
+        console.log("保存処理開始...");
         const result = await saveTestResult(formData);
+        console.log("保存結果:", result);
 
         if (result.error) {
           console.error("保存に失敗:", result.error);
@@ -43,17 +62,14 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
             description: result.error,
           });
         } else {
-          // 保存成功
           setIsSaved(true);
-          // 保存成功をローカルストレージに記録
           localStorage.setItem(storageKey, "true");
           toast.success("保存完了", {
             description: "診断結果を保存しました",
           });
 
-          // from=testパラメータを削除した新しいURLに置き換える
-          // これにより、リロード時にも保存が再実行されなくなる
-          const newUrl = window.location.pathname + `?type=${mbtiType}`;
+          const newUrl =
+            window.location.pathname + `?type=${mbtiType}&resultId=${resultId}`;
           window.history.replaceState({}, "", newUrl);
         }
       } catch (e) {
@@ -67,9 +83,10 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
       }
     };
 
-    // コンポーネントマウント時に自動的に保存処理を実行
-    save();
-  }, [mbtiType, isSaved, router]);
+    if (isNewResult) {
+      save();
+    }
+  }, [mbtiType, isSaved, isNewResult, searchParams]);
 
   if (isLoading) {
     return (

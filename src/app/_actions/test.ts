@@ -56,21 +56,19 @@ export async function getTestResults() {
 
 export async function saveTestResult(formData: FormData) {
   try {
+    // 必要なデータを取得
+    const mbtiType = formData.get("mbtiType") as string;
+
+    // クライアント認証を確認
     const clerkUser = await currentUser();
     if (!clerkUser) {
-      throw new Error("ログインが必要です");
+      throw new Error("ユーザー認証が必要です");
     }
 
-    const mbtiType = formData.get("mbtiType") as MBTITypeKey;
-
-    // MBTIタイプのバリデーション
-    if (!mbtiType || !/^[EI][NS][TF][JP]$/.test(mbtiType)) {
-      throw new Error("無効なMBTIタイプです");
-    }
-
+    // Supabaseクライアント作成
     const supabase = createClient();
 
-    // まずClerkのIDに対応するSupabaseのユーザーIDを取得
+    // ユーザーデータを取得
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
@@ -86,7 +84,10 @@ export async function saveTestResult(formData: FormData) {
     if (!userData) {
       const { data: newUser, error: createError } = await supabase
         .from("users")
-        .insert({ clerk_id: clerkUser.id })
+        .insert({
+          clerk_id: clerkUser.id,
+          email: clerkUser.emailAddresses[0]?.emailAddress || "",
+        })
         .select()
         .single();
 
@@ -95,12 +96,11 @@ export async function saveTestResult(formData: FormData) {
         throw new Error("ユーザー情報の作成に失敗しました");
       }
 
-      // 新しく作成したユーザーのIDを使用
-      const { error } = await supabase.from("test_results").insert({
-        user_id: newUser.id,
-        mbti_type: mbtiType,
-        answers: {}, // 必要に応じて回答データを保存
-        created_at: new Date().toISOString(), // 明示的に現在日時を設定
+      // 新しく作成したユーザーIDで保存
+      const { data, error } = await supabase.rpc("save_test_result", {
+        p_user_id: newUser.id,
+        p_mbti_type: mbtiType,
+        p_answers: {},
       });
 
       if (error) {
@@ -108,12 +108,15 @@ export async function saveTestResult(formData: FormData) {
         throw new Error(`テスト結果の保存に失敗しました: ${error.message}`);
       }
     } else {
-      // 既存ユーザーのIDを使用
-      const { error } = await supabase.from("test_results").insert({
-        user_id: userData.id,
-        mbti_type: mbtiType,
-        answers: {}, // 必要に応じて回答データを保存
-        created_at: new Date().toISOString(), // 明示的に現在日時を設定
+      // 既存ユーザーIDで保存（RPC関数を使用）
+      const { data, error } = await supabase.rpc("save_test_result", {
+        p_user_id: userData.id,
+        p_mbti_type: mbtiType,
+        p_answers: {},
+        p_e_score: 0,
+        p_n_score: 0,
+        p_f_score: 0,
+        p_p_score: 0,
       });
 
       if (error) {
