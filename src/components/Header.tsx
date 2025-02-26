@@ -5,7 +5,6 @@ import {
   SignUpButton,
   SignedIn,
   SignedOut,
-  UserButton,
   useUser,
 } from "@clerk/nextjs";
 import Link from "next/link";
@@ -24,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import UserSearch from "@/components/UserSearch";
 
-// プロフィールタイプの定義（必要に応じて）
+// プロフィールタイプの定義
 type Profile = {
   display_name?: string;
   custom_image_url?: string;
@@ -43,17 +42,9 @@ export default function Header() {
       if (data) setProfile(data);
     }
     fetchProfile();
-  }, [isSignedIn]);
+  }, [user]);
 
-  const getProfileImageUrl = () => {
-    if (profile?.custom_image_url && profile.custom_image_url.trim() !== "") {
-      return profile.custom_image_url;
-    }
-    // デフォルト画像を使用
-    return "/images/default-avatar.png";
-  };
-
-  // イニシャルを取得する関数を追加
+  // ユーザーのイニシャルを取得
   const getInitial = () => {
     if (profile?.display_name) {
       return profile.display_name.charAt(0).toUpperCase();
@@ -65,102 +56,82 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="hidden items-center space-x-2 md:flex">
-              <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
-                MBTI診断
-              </span>
-            </Link>
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <Link href="/test" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      診断を始める
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link href="/about" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      MBTIについて
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
+    <header className="bg-white border-b sticky top-0 z-10">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center space-x-2">
+            <span className="text-xl font-bold">MBTI App</span>
+          </Link>
 
-          <div className="flex-1 max-w-xl mx-4">
-            <UserSearch />
-          </div>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link href="/test" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    診断テスト
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/types" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    タイプ一覧
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
 
-          <div className="flex items-center gap-4">
-            <SignedIn>
-              <Link
-                href="/profile"
-                className={cn(
-                  "group flex items-center gap-2 rounded-full border px-4 py-2",
-                  "bg-background/50 hover:bg-accent transition-colors",
-                  "text-sm font-medium text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {loading ? (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
-                ) : profile?.custom_image_url ? (
+        {/* 検索ボックス - デスクトップのみ表示 */}
+        <div className="hidden md:block w-1/3 max-w-xs">
+          <UserSearch />
+        </div>
+
+        <SignedOut>
+          <div className="flex items-center gap-2">
+            <SignInButton>
+              <Button variant="outline" size="sm">
+                ログイン
+              </Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button size="sm">登録</Button>
+            </SignUpButton>
+          </div>
+        </SignedOut>
+
+        <SignedIn>
+          <div className="flex items-center">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-50"
+            >
+              {profile?.custom_image_url ? (
+                <div className="w-9 h-9 relative">
                   <Image
                     src={profile.custom_image_url}
-                    alt="プロフィール"
-                    width={32}
-                    height={32}
-                    className="rounded-full"
+                    alt={profile?.display_name || "プロフィール"}
+                    fill
+                    className="rounded-full object-cover"
                   />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium">
-                    {getInitial()}
-                  </div>
-                )}
-                <span className="inline-block max-w-[100px] truncate">
-                  {profile?.display_name || user?.firstName || "ゲスト"}
-                </span>
-              </Link>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "hidden",
-                    userButtonPopoverCard:
-                      "shadow-lg rounded-lg border bg-popover p-2",
-                    userButtonPopoverFooter: "hidden",
-                  },
-                }}
-              />
-            </SignedIn>
-
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="ghost" size="sm">
-                  ログイン
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white hover:opacity-90"
-                >
-                  新規登録
-                </Button>
-              </SignUpButton>
-            </SignedOut>
+                </div>
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold">
+                  {getInitial()}
+                </div>
+              )}
+              <span className="text-sm font-medium hidden md:inline-block">
+                {profile?.display_name || user?.firstName || "ユーザー"}
+              </span>
+            </Link>
           </div>
-        </div>
+        </SignedIn>
+      </div>
+
+      {/* 検索ボックス - モバイルのみ表示 */}
+      <div className="md:hidden px-4 pb-3">
+        <UserSearch />
       </div>
     </header>
   );

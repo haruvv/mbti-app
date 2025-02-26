@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
-import Header from "../components/layout/Header";
+import Header from "@/components/Header";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -22,20 +22,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="ja">
-      <ClerkProvider>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
+    <ClerkProvider>
+      <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
+        <body>
           <Header />
-          <main className="pt-16">{children}</main>
-          <Toaster richColors />
+          <main>{children}</main>
+          <Toaster />
         </body>
-      </ClerkProvider>
-    </html>
+      </html>
+    </ClerkProvider>
   );
 }
