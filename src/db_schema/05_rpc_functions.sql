@@ -427,18 +427,15 @@ BEGIN
 END;
 $$;
 
--- 古い関数を削除
-DROP FUNCTION IF EXISTS save_test_result(UUID, TEXT, JSONB);
-
--- 新しい関数に引数のデフォルト値を設定
+-- テスト結果を保存するRPC関数
 CREATE OR REPLACE FUNCTION save_test_result(
     p_user_id UUID,
     p_mbti_type TEXT,
-    p_answers JSONB DEFAULT '{}',
-    p_e_score INTEGER DEFAULT 0,
-    p_n_score INTEGER DEFAULT 0,
-    p_f_score INTEGER DEFAULT 0,
-    p_p_score INTEGER DEFAULT 0
+    p_answers JSONB,
+    p_e_score INTEGER DEFAULT 50,
+    p_n_score INTEGER DEFAULT 50,
+    p_f_score INTEGER DEFAULT 50,
+    p_p_score INTEGER DEFAULT 50
 )
 RETURNS json
 LANGUAGE plpgsql
@@ -458,12 +455,20 @@ BEGIN
         user_id,
         mbti_type,
         answers,
+        e_score,
+        n_score,
+        f_score,
+        p_score,
         created_at
     )
     VALUES (
         p_user_id,
         p_mbti_type,
         p_answers,
+        p_e_score,
+        p_n_score,
+        p_f_score,
+        p_p_score,
         TIMEZONE('utc'::text, NOW())
     )
     RETURNING id INTO v_result_id;
@@ -473,6 +478,10 @@ BEGIN
         'result_id', v_result_id,
         'user_id', user_id,
         'mbti_type', mbti_type,
+        'e_score', e_score,
+        'n_score', n_score,
+        'f_score', f_score,
+        'p_score', p_score,
         'created_at', created_at
     ) INTO v_result
     FROM test_results

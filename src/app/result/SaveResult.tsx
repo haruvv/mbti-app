@@ -48,8 +48,30 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
       setIsLoading(true);
 
       try {
+        const answers = JSON.parse(
+          localStorage.getItem("mbti_answers") || "{}"
+        );
+
+        let eScore = 50;
+        let nScore = 50;
+        let fScore = 50;
+        let pScore = 50;
+
+        if (mbtiType.includes("E")) eScore = 75;
+        if (mbtiType.includes("I")) eScore = 25;
+        if (mbtiType.includes("N")) nScore = 75;
+        if (mbtiType.includes("S")) nScore = 25;
+        if (mbtiType.includes("F")) fScore = 75;
+        if (mbtiType.includes("T")) fScore = 25;
+        if (mbtiType.includes("P")) pScore = 75;
+        if (mbtiType.includes("J")) pScore = 25;
+
         const formData = new FormData();
         formData.append("mbtiType", mbtiType);
+        formData.append("eScore", eScore.toString());
+        formData.append("nScore", nScore.toString());
+        formData.append("fScore", fScore.toString());
+        formData.append("pScore", pScore.toString());
 
         console.log("保存処理開始...");
         const result = await saveTestResult(formData);

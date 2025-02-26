@@ -23,34 +23,27 @@ export async function getTestResults() {
       .eq("clerk_id", clerkUser.id)
       .single();
 
-    if (userError) {
+    if (userError || !userData) {
       console.error("User fetch error:", userError);
-      // エラーをスローするのではなく、エラー結果を返す
       return { success: false, error: "ユーザー情報の取得に失敗しました" };
     }
 
-    if (!userData) {
-      // ユーザーが見つからない場合も、エラー結果を返す
-      return { success: false, error: "ユーザーが見つかりません" };
-    }
-
-    // テスト結果を取得（created_atカラムによるソートを削除）
-    const { data: testResults, error: testError } = await supabase
+    // ユーザーのテスト結果を全て取得（修正版）
+    const { data, error } = await supabase
       .from("test_results")
-      .select("*")
+      .select("id, mbti_type, created_at, e_score, n_score, f_score, p_score") // スコアデータを追加
       .eq("user_id", userData.id)
-      .order("id", { ascending: false }); // idでソートに変更
+      .order("created_at", { ascending: false });
 
-    if (testError) {
-      console.error("Test results fetch error:", testError);
+    if (error) {
+      console.error("Test results fetch error:", error);
       return { success: false, error: "テスト結果の取得に失敗しました" };
     }
 
-    // テスト結果がない場合でも空の配列を返す
-    return { success: true, data: testResults || [] };
+    return { success: true, data };
   } catch (error) {
-    console.error("Error in getTestResults:", error);
-    return { success: false, error: "テスト結果の取得に失敗しました" };
+    console.error("Error fetching test results:", error);
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -58,6 +51,10 @@ export async function saveTestResult(formData: FormData) {
   try {
     // 必要なデータを取得
     const mbtiType = formData.get("mbtiType") as string;
+    const eScore = parseInt(formData.get("eScore") as string) || 50;
+    const nScore = parseInt(formData.get("nScore") as string) || 50;
+    const fScore = parseInt(formData.get("fScore") as string) || 50;
+    const pScore = parseInt(formData.get("pScore") as string) || 50;
 
     // クライアント認証を確認
     const clerkUser = await currentUser();
@@ -101,6 +98,10 @@ export async function saveTestResult(formData: FormData) {
         p_user_id: newUser.id,
         p_mbti_type: mbtiType,
         p_answers: {},
+        p_e_score: eScore,
+        p_n_score: nScore,
+        p_f_score: fScore,
+        p_p_score: pScore,
       });
 
       if (error) {
@@ -113,10 +114,10 @@ export async function saveTestResult(formData: FormData) {
         p_user_id: userData.id,
         p_mbti_type: mbtiType,
         p_answers: {},
-        p_e_score: 0,
-        p_n_score: 0,
-        p_f_score: 0,
-        p_p_score: 0,
+        p_e_score: eScore,
+        p_n_score: nScore,
+        p_f_score: fScore,
+        p_p_score: pScore,
       });
 
       if (error) {
@@ -129,6 +130,48 @@ export async function saveTestResult(formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error("Error saving test result:", error);
+    return { error: (error as Error).message };
+  }
+}
+
+// 特定のテスト結果IDで結果を取得する関数
+export async function getTestResultById(resultId: string) {
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return { error: "ログインが必要です" };
+    }
+
+    const supabase = createClient();
+
+    // ClerkIDからユーザー情報を取得
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", clerkUser.id)
+      .single();
+
+    if (userError || !userData) {
+      console.error("User fetch error:", userError);
+      return { error: "ユーザー情報の取得に失敗しました" };
+    }
+
+    // 指定されたIDのテスト結果を取得（自分のテスト結果のみ）
+    const { data, error } = await supabase
+      .from("test_results")
+      .select("*")
+      .eq("id", resultId)
+      .eq("user_id", userData.id)
+      .single();
+
+    if (error) {
+      console.error("Test result fetch error:", error);
+      return { error: "テスト結果の取得に失敗しました" };
+    }
+
+    return { data };
+  } catch (error) {
+    console.error("Error fetching test result:", error);
     return { error: (error as Error).message };
   }
 }

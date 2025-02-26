@@ -20,16 +20,11 @@ export default async function TypePage({
   const typeData = typeDescriptions[mbtiType];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 animate-gradient-x">
-      <div className="container mx-auto max-w-4xl pt-8 pb-16">
-        <div className="mb-6">
-          <Link
-            href="/types"
-            className="inline-flex items-center text-indigo-600 hover:text-indigo-700"
-          >
-            ← タイプ一覧に戻る
-          </Link>
-        </div>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="container max-w-6xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">
+          MBTIタイプ詳細: {mbtiType}
+        </h1>
 
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
@@ -46,7 +41,11 @@ export default async function TypePage({
           </div>
 
           <div className="md:col-span-2">
-            <TypeDescription type={mbtiType} />
+            <TypeDescription
+              type={mbtiType}
+              typeData={typeData}
+              mbtiType={mbtiType}
+            />
           </div>
         </div>
       </div>

@@ -18,6 +18,11 @@ import {
   Calendar,
   Star,
   BarChart,
+  User,
+  BadgeCheck,
+  AtSign,
+  Activity,
+  PlusCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,6 +74,10 @@ export default async function ProfilePage() {
 
     // ソーシャルリンクの取得
     const socialLinks = profileData.social_links || {};
+
+    // データ取得後
+    console.log("取得したテスト結果数:", testResults?.length);
+    console.log("テスト結果データ:", testResults);
 
     return (
       <div className="container max-w-6xl px-4 py-8">
@@ -231,29 +240,32 @@ export default async function ProfilePage() {
 
                       <div className="md:w-2/3">
                         <h3 className="text-lg font-medium mb-4">詳細スコア</h3>
-                        <div className="space-y-4">
-                          <ScoreBar
-                            left="内向型 (I)"
-                            right="外向型 (E)"
-                            value={latestResult.e_score}
-                            inverted
-                          />
-                          <ScoreBar
-                            left="現実型 (S)"
-                            right="直感型 (N)"
-                            value={latestResult.n_score}
-                          />
-                          <ScoreBar
-                            left="思考型 (T)"
-                            right="感情型 (F)"
-                            value={latestResult.f_score}
-                          />
-                          <ScoreBar
-                            left="認知型 (J)"
-                            right="探索型 (P)"
-                            value={latestResult.p_score}
-                          />
-                        </div>
+                        {latestResult &&
+                          typeof latestResult.e_score === "number" && (
+                            <>
+                              <ScoreBar
+                                left="内向型 (I)"
+                                right="外向型 (E)"
+                                value={latestResult.e_score}
+                                inverted
+                              />
+                              <ScoreBar
+                                left="現実型 (S)"
+                                right="直感型 (N)"
+                                value={latestResult.n_score}
+                              />
+                              <ScoreBar
+                                left="思考型 (T)"
+                                right="感情型 (F)"
+                                value={latestResult.f_score}
+                              />
+                              <ScoreBar
+                                left="認知型 (J)"
+                                right="探索型 (P)"
+                                value={latestResult.p_score}
+                              />
+                            </>
+                          )}
 
                         <div className="flex justify-between mt-6">
                           <Link href={`/test/history/${latestResult.id}`}>
@@ -386,109 +398,106 @@ export default async function ProfilePage() {
 
           {/* 詳細情報タブ */}
           <TabsContent value="about">
-            <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-                <CardTitle className="text-lg font-semibold text-gray-800">
-                  詳細プロフィール
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 pt-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    表示名
-                  </h3>
-                  <p>{displayName}</p>
-                </div>
-
-                {handle && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">
-                      ユーザーID
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+              {/* ユーザー情報カード */}
+              <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 border-t-4 border-t-indigo-500">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <User className="h-5 w-5 text-indigo-500" />
+                    ユーザー情報
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-sm font-medium text-gray-500">
+                      表示名
                     </h3>
-                    <p>@{handle}</p>
-                  </div>
-                )}
-
-                {profileData.bio && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">
-                      自己紹介
-                    </h3>
-                    <p>{profileData.bio}</p>
-                  </div>
-                )}
-
-                {latestMbtiType && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">
-                      MBTIタイプ
-                    </h3>
-                    <p className="flex items-center gap-2">
-                      {latestMbtiType}
-                      <span className="text-gray-600">
-                        (
-                        {typeDescriptions[
-                          latestMbtiType as keyof typeof typeDescriptions
-                        ]?.name || ""}
-                        )
-                      </span>
+                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
+                      <BadgeCheck className="h-4 w-4 text-indigo-500" />
+                      {displayName}
                     </p>
                   </div>
-                )}
 
-                {Object.keys(socialLinks).length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">
-                      ソーシャルリンク
+                  {handle && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="text-sm font-medium text-gray-500">
+                        ユーザーID
+                      </h3>
+                      <p className="text-base text-gray-800 flex items-center gap-2">
+                        <AtSign className="h-4 w-4 text-indigo-500" />@{handle}
+                      </p>
+                    </div>
+                  )}
+
+                  {profileData.bio && (
+                    <div className="flex flex-col gap-1">
+                      <h3 className="text-sm font-medium text-gray-500">
+                        自己紹介
+                      </h3>
+                      <div className="bg-gray-50 p-3 rounded-md text-gray-700 italic border-l-2 border-indigo-300">
+                        "{profileData.bio}"
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">
+                      アカウント作成日
                     </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {socialLinks.twitter && (
-                        <a
-                          href={socialLinks.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-gray-600 hover:text-blue-500 transition-colors"
-                        >
-                          <Twitter className="h-4 w-4" />
-                          Twitter
-                        </a>
-                      )}
-                      {socialLinks.instagram && (
-                        <a
-                          href={socialLinks.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-gray-600 hover:text-pink-500 transition-colors"
-                        >
-                          <Instagram className="h-4 w-4" />
-                          Instagram
-                        </a>
-                      )}
-                      {socialLinks.website && (
-                        <a
-                          href={socialLinks.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-gray-600 hover:text-green-500 transition-colors"
-                        >
-                          <Globe className="h-4 w-4" />
-                          ウェブサイト
-                        </a>
-                      )}
+                    <div className="flex items-center text-gray-700">
+                      <Calendar className="h-4 w-4 mr-2 text-indigo-500" />
+                      <FormattedDate
+                        date={profileData.created_at}
+                        format="full"
+                      />
                     </div>
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    アカウント作成日
-                  </h3>
-                  <p>
-                    <FormattedDate date={profileData.created_at} />
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+              {/* 活動統計カード */}
+              <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 border-t-4 border-t-green-500">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-green-50">
+                  <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <BarChart className="h-5 w-5 text-green-500" />
+                    活動統計
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="border rounded-lg p-5 text-center bg-gray-50">
+                    <div className="text-3xl font-bold text-indigo-600 mb-2">
+                      {testResults?.length || 0}
+                    </div>
+                    <p className="text-sm text-gray-600">診断テスト回数</p>
+                  </div>
+
+                  {latestResult && (
+                    <div className="border rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                        <Activity className="h-4 w-4 mr-1 text-indigo-500" />
+                        最新の診断タイプ
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-semibold text-indigo-600">
+                          {latestResult.mbti_type}
+                        </span>
+                        <FormattedDate
+                          date={latestResult.created_at}
+                          className="text-xs text-gray-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <Link href="/test" className="block">
+                    <Button variant="outline" className="w-full">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      新しい診断テストを受ける
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -530,9 +539,13 @@ function ScoreBar({
         <span>{left}</span>
         <span>{right}</span>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
+      <div className="flex h-2.5 w-full rounded-full overflow-hidden">
         <div
-          className="bg-blue-600 h-2.5 rounded-full"
+          className="bg-indigo-600 h-full"
+          style={{ width: `${100 - percentage}%` }}
+        ></div>
+        <div
+          className="bg-green-500 h-full"
           style={{ width: `${percentage}%` }}
         ></div>
       </div>
