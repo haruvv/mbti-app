@@ -42,28 +42,6 @@ export function TypeDescription({ type }: TypeDescriptionProps) {
           </ul>
         </div>
       )}
-
-      {typeData.careers && typeData.careers.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2 text-indigo-700">
-            キャリアの適性
-          </h3>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            {typeData.careers.map((career, index) => (
-              <li key={index}>{career}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {typeData.famousPeople && typeData.famousPeople.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-2 text-indigo-700">
-            有名人・キャラクター
-          </h3>
-          <p className="text-gray-700">{typeData.famousPeople.join("、")}</p>
-        </div>
-      )}
     </div>
   );
 }

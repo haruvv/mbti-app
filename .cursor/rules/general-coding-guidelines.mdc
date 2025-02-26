@@ -54,3 +54,5 @@ globs: src/**/*.{ts,tsx}
   - 主キーは `UUID` を使用し、`id` とする。
   - 作成したSQLは `db_schema/` ディレクトリに `.sql` ファイルとして保存。
   - ファイル名はテーブル名に基づく（例: `db_schema/users.sql`）。
+
+  

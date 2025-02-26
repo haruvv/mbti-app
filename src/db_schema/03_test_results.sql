@@ -18,7 +18,7 @@ CREATE TABLE test_results (
     user_id UUID NOT NULL REFERENCES users(id),
     mbti_type VARCHAR(4) NOT NULL,
     answers JSONB DEFAULT '{}',
-    taken_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   
     -- 制約
     CONSTRAINT valid_mbti_type CHECK (
@@ -31,12 +31,12 @@ DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'pg_temp' AND tablename = 'test_results_backup') THEN
         INSERT INTO test_results (
-            id, user_id, mbti_type, answers, taken_at
+            id, user_id, mbti_type, answers, created_at
         )
         SELECT 
             id, user_id, mbti_type, 
             COALESCE(answers, '{}'::jsonb),
-            taken_at
+            created_at
         FROM test_results_backup;
         
         DROP TABLE test_results_backup;
@@ -46,7 +46,7 @@ $$;
 
 -- インデックスの作成
 CREATE INDEX idx_test_results_user_id ON test_results(user_id);
-CREATE INDEX idx_test_results_taken_at ON test_results(taken_at);
+CREATE INDEX idx_test_results_created_at ON test_results(created_at);
 CREATE INDEX idx_test_results_mbti_type ON test_results(mbti_type);
 
 -- RLSポリシーの設定

@@ -82,21 +82,21 @@ export interface Database {
           user_id: string;
           mbti_type: string;
           answers: Json;
-          taken_at: string;
+          created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
           mbti_type: string;
           answers?: Json;
-          taken_at?: string;
+          created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
           mbti_type?: string;
           answers?: Json;
-          taken_at?: string;
+          created_at?: string;
         };
       };
       follows: {

@@ -337,7 +337,7 @@ BEGIN
         up.preferred_mbti,
         (SELECT tr.mbti_type FROM test_results tr 
          WHERE tr.user_id = p_user_id 
-         ORDER BY tr.taken_at DESC LIMIT 1)
+         ORDER BY tr.created_at DESC LIMIT 1)
     ) INTO v_mbti
     FROM user_profiles up
     WHERE up.user_id = p_user_id;
@@ -372,7 +372,7 @@ BEGIN
          EXISTS (
              SELECT 1 FROM test_results tr
              WHERE tr.user_id = up.user_id AND tr.mbti_type = ANY(v_compatible_types)
-             ORDER BY tr.taken_at DESC
+             ORDER BY tr.created_at DESC
              LIMIT 1
          ));
     
@@ -390,7 +390,7 @@ BEGIN
                 up.preferred_mbti,
                 (SELECT tr.mbti_type FROM test_results tr 
                  WHERE tr.user_id = up.user_id 
-                 ORDER BY tr.taken_at DESC LIMIT 1)
+                 ORDER BY tr.created_at DESC LIMIT 1)
             ) as mbti_type,
             EXISTS(
                 SELECT 1 FROM follows f
@@ -404,7 +404,7 @@ BEGIN
              EXISTS (
                  SELECT 1 FROM test_results tr
                  WHERE tr.user_id = up.user_id AND tr.mbti_type = ANY(v_compatible_types)
-                 ORDER BY tr.taken_at DESC
+                 ORDER BY tr.created_at DESC
                  LIMIT 1
              ))
         ORDER BY 

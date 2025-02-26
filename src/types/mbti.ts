@@ -5,5 +5,5 @@ export type { MBTITypeKey as MBTIType };
 export type TestResult = {
   id: string;
   mbti_type: MBTITypeKey;
-  taken_at: string;
+  created_at: string;
 };
