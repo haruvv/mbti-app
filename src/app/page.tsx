@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ArrowRight, Brain, Users, Activity, LineChart } from "lucide-react";
 import { typeDescriptions } from "./data/mbtiTypes";
 import { TypeCard } from "@/components/features/mbti/TypeCard";
+import { DebugPanel } from "@/components/debug/DebugPanel";
 
 export default async function Home() {
   const supabase = createClient();
@@ -20,8 +21,19 @@ export default async function Home() {
     .from("test_results")
     .select("*", { count: "exact", head: true });
 
+  // デバッグデータを準備（存在する変数のみを使用）
+  const debugData = {
+    stats: {
+      userCount,
+      testCount,
+    },
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
+      {/* デバッグパネル */}
+      <DebugPanel data={debugData} />
+
       {/* ヒーローセクション */}
       <section className="py-20 bg-gradient-to-b from-white to-blue-50">
         <div className="container px-4 mx-auto max-w-6xl">

@@ -6,14 +6,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
+import { createClient } from "@supabase/supabase-js";
 
 // ユーザーのイニシャルを取得する関数を追加
 const getInitial = (name: string): string => {
   return name ? name.charAt(0).toUpperCase() : "U";
 };
 
+// 検索結果の型定義を修正して id フィールドも許容する
 type UserSearchResult = {
-  user_id: string;
+  id?: string; // RPC関数からの結果用
+  user_id?: string; // フォールバック結果用
   display_name: string;
   custom_image_url?: string;
   handle?: string;
@@ -60,14 +63,12 @@ export default function UserSearch() {
 
       setIsLoading(true);
       try {
+        // APIエンドポイントを使用した検索
         const response = await fetch(
-          `/api/search/users?q=${encodeURIComponent(debouncedSearchQuery)}`
+          `/api/users/search?q=${encodeURIComponent(debouncedSearchQuery)}`
         );
         const data = await response.json();
-
-        if (data.users) {
-          setResults(data.users);
-        }
+        setResults(data.users || []);
       } catch (error) {
         console.error("検索エラー:", error);
       } finally {
@@ -98,8 +99,13 @@ export default function UserSearch() {
 
   // ユーザープロフィールに移動したとき
   const handleUserSelect = (handle: string) => {
+    if (!handle) return;
+
     setIsOpen(false);
     setSearchQuery("");
+    setResults([]);
+
+    // リンクを使ってクライアント側で遷移させる（エラーを避けるため）
     router.push(`/profile/${handle}`);
   };
 
@@ -133,17 +139,18 @@ export default function UserSearch() {
       {isOpen && (
         <div
           ref={resultsRef}
-          className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-96 overflow-y-auto"
+          className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 overflow-hidden max-h-96 overflow-y-auto"
         >
           {isLoading ? (
-            <div className="flex justify-center items-center p-4">
+            <div className="flex justify-center p-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
             </div>
           ) : results.length > 0 ? (
             <ul>
               {results.map((user) => (
                 <li
-                  key={user.user_id}
+                  // id と user_id の両方をサポートする一意のキー設定
+                  key={user.id || user.user_id || `user-${Math.random()}`}
                   className="border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
                   onClick={() => user.handle && handleUserSelect(user.handle)}
                 >

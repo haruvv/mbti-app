@@ -27,6 +27,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DebugPanel } from "@/components/debug/DebugPanel";
+
+// デバッグ管理用の定数を追加
+const DEBUG_MODE = process.env.NODE_ENV === "development";
 
 export default async function ProfilePage() {
   try {
@@ -63,6 +67,12 @@ export default async function ProfilePage() {
     followingCount = followCounts?.following_count || 0;
     followersCount = followCounts?.followers_count || 0;
 
+    // 診断回数を取得
+    const { count: testCount } = await supabase
+      .from("test_results")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", profileData.user_id);
+
     // プロフィール表示用データを取得
     const displayName = profileData.display_name || "ゲスト";
 
@@ -76,420 +86,400 @@ export default async function ProfilePage() {
     const socialLinks = profileData.social_links || {};
 
     // データ取得後
-    console.log("取得したテスト結果数:", testResults?.length);
-    console.log("テスト結果データ:", testResults);
+    if (DEBUG_MODE) {
+      console.log("取得したテスト結果数:", testResults?.length);
+      console.log("テスト結果データ:", testResults);
+      console.log("診断統計:", {
+        testCount,
+        latestTest: latestResult
+          ? {
+              type: latestResult.mbti_type,
+              date: latestResult.created_at,
+            }
+          : null,
+      });
+    }
+
+    // デバッグ用データの準備
+    const debugData = {
+      profile: profileData,
+      testCount,
+      latestResult,
+      followCounts: { followingCount, followersCount },
+      socialLinks,
+      bookmarkedTypes,
+    };
+
+    const debugSections = [
+      { title: "プロフィール情報", data: profileData },
+      {
+        title: "テスト情報",
+        data: {
+          testCount,
+          latestResult,
+          testResults: testResults?.slice(0, 3),
+        },
+      },
+      { title: "フォロー情報", data: { followingCount, followersCount } },
+    ];
 
     return (
-      <div className="container max-w-6xl px-4 py-8">
-        {/* プロフィールヘッダー */}
-        <div className="relative mb-8">
-          {/* カバー画像 */}
-          <div className="h-48 w-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-t-xl"></div>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        {/* デバッグパネル */}
+        <DebugPanel data={debugData} sections={debugSections} />
 
-          {/* プロフィール情報 */}
-          <div className="flex flex-col md:flex-row items-center md:items-end -mt-16 px-6 pb-4">
-            <div className="relative mb-4 md:mb-0 mr-0 md:mr-6">
-              {profileData.custom_image_url ? (
-                <Image
-                  src={profileData.custom_image_url}
-                  alt={displayName}
-                  width={130}
-                  height={130}
-                  className="rounded-full border-4 border-white shadow-md"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-gradient-to-r from-green-400 to-blue-500 border-4 border-white shadow-md flex items-center justify-center text-white text-5xl font-bold">
-                  {displayName?.charAt(0).toUpperCase()}
+        <div className="container mx-auto max-w-4xl px-4 py-8">
+          {/* プロフィールカード */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+            {/* ヘッダー部分 */}
+            <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+
+            <div className="px-6 pb-6">
+              {/* アバター画像 */}
+              <div className="relative -mt-16 mb-4">
+                <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white">
+                  <Image
+                    src={profileData.custom_image_url || "/default-avatar.png"}
+                    alt={displayName}
+                    width={128}
+                    height={128}
+                    className="object-cover w-full h-full"
+                  />
                 </div>
-              )}
-            </div>
-
-            <div className="flex flex-col items-center md:items-start">
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-3xl font-bold">{displayName}</h1>
-                {latestMbtiType && (
-                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
-                    {latestMbtiType}
-                  </span>
-                )}
               </div>
-              {handle && <p className="text-gray-500 mb-3">@{handle}</p>}
-              {profileData.bio && (
-                <p className="text-gray-700 mb-4 text-center md:text-left">
-                  {profileData.bio}
-                </p>
-              )}
 
-              {/* ソーシャルリンクとフォロー情報 */}
-              <div className="flex flex-wrap items-center gap-4 mt-2">
-                {/* ソーシャルリンク */}
-                <div className="flex gap-2">
-                  {socialLinks.twitter && (
-                    <a
-                      href={socialLinks.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-blue-500 transition-colors"
-                    >
-                      <Twitter className="h-5 w-5" />
-                    </a>
-                  )}
-                  {socialLinks.instagram && (
-                    <a
-                      href={socialLinks.instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-pink-500 transition-colors"
-                    >
-                      <Instagram className="h-5 w-5" />
-                    </a>
-                  )}
-                  {socialLinks.website && (
-                    <a
-                      href={socialLinks.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-green-500 transition-colors"
-                    >
-                      <Globe className="h-5 w-5" />
-                    </a>
-                  )}
-                </div>
+              {/* プロフィール情報 */}
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                      <h1 className="text-2xl font-bold flex items-center">
+                        {displayName}
+                        {latestMbtiType && (
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            {latestMbtiType}
+                          </span>
+                        )}
+                      </h1>
+                      {handle && (
+                        <p className="text-gray-500 flex items-center mt-1">
+                          <AtSign size={16} className="mr-1" />
+                          {handle}
+                        </p>
+                      )}
+                    </div>
 
-                {/* フォロー統計 */}
-                <div className="flex items-center gap-4">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/profile/edit">
+                        <Settings className="mr-2 h-4 w-4" />
+                        プロフィール編集
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* ユーザー詳細情報 */}
+                  <div className="space-y-3 mb-6">
+                    {profileData.bio && (
+                      <p className="text-gray-700 whitespace-pre-wrap">
+                        {profileData.bio}
+                      </p>
+                    )}
+
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                        <h3 className="font-medium text-gray-700 mb-2 flex items-center">
+                          <User size={16} className="mr-1.5" />
+                          プロフィール情報
+                        </h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center">
+                            <Calendar size={16} className="mr-1.5" />
+                            <span className="text-sm">
+                              登録日:{" "}
+                              <FormattedDate date={profileData.created_at} />
+                            </span>
+                          </div>
+
+                          <div className="flex items-center">
+                            <Activity size={16} className="mr-1.5" />
+                            <span className="text-sm">
+                              診断回数: {testCount || 0}回
+                            </span>
+                          </div>
+
+                          {latestMbtiType && (
+                            <div className="flex items-center">
+                              <Star size={16} className="mr-1.5" />
+                              <span className="text-sm">
+                                最新診断: {latestMbtiType}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ソーシャルリンク */}
+                    {(socialLinks.twitter ||
+                      socialLinks.instagram ||
+                      socialLinks.website) && (
+                      <div className="flex gap-3 mt-3">
+                        {socialLinks.twitter && (
+                          <a
+                            href={`https://twitter.com/${socialLinks.twitter}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 hover:text-blue-400"
+                          >
+                            <Twitter size={20} />
+                          </a>
+                        )}
+                        {socialLinks.instagram && (
+                          <a
+                            href={`https://instagram.com/${socialLinks.instagram}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 hover:text-pink-500"
+                          >
+                            <Instagram size={20} />
+                          </a>
+                        )}
+                        {socialLinks.website && (
+                          <a
+                            href={socialLinks.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 hover:text-green-500"
+                          >
+                            <Globe size={20} />
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* フォロー数 */}
                   <FollowStats
+                    userId={profileData.user_id}
+                    handle={handle}
                     followingCount={followingCount}
                     followersCount={followersCount}
-                    handle={handle || ""}
                   />
                 </div>
               </div>
             </div>
-
-            {/* 編集ボタン */}
-            <div className="absolute top-52 md:top-4 right-4">
-              <Link href="/profile/edit">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 bg-white/80 backdrop-blur-sm hover:bg-white"
-                >
-                  <Edit className="h-4 w-4" />
-                  編集
-                </Button>
-              </Link>
-            </div>
           </div>
-        </div>
 
-        {/* タブコンテンツ */}
-        <Tabs defaultValue="results" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8 bg-white/80 backdrop-blur-sm shadow-sm">
-            <TabsTrigger
-              value="results"
-              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
-            >
-              診断結果
-            </TabsTrigger>
-            <TabsTrigger
-              value="favorites"
-              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
-            >
-              お気に入り
-            </TabsTrigger>
-            <TabsTrigger
-              value="about"
-              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
-            >
-              詳細情報
-            </TabsTrigger>
-          </TabsList>
+          {/* タブコンテンツ */}
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="mb-6 bg-white">
+              <TabsTrigger value="profile">プロフィール</TabsTrigger>
+              <TabsTrigger value="posts">投稿</TabsTrigger>
+              <TabsTrigger value="test">診断結果</TabsTrigger>
+            </TabsList>
 
-          {/* 診断結果タブ */}
-          <TabsContent value="results">
-            <div className="grid grid-cols-1 gap-6">
-              {latestResult ? (
+            <TabsContent value="profile" className="space-y-6">
+              {/* MBTIタイプ情報 */}
+              {latestMbtiType && typeDescriptions[latestMbtiType] && (
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-xl">最新の診断結果</CardTitle>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <FormattedDate date={latestResult.created_at} />
-                    </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center">
+                      <BadgeCheck className="mr-2 h-5 w-5 text-indigo-500" />
+                      {latestMbtiType}タイプ情報
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="md:w-1/3">
-                        <div className="text-center p-6 bg-blue-50 rounded-lg">
-                          <div className="text-3xl font-bold text-blue-600 mb-1">
-                            {latestResult.mbti_type}
-                          </div>
-                          <div className="text-lg text-gray-700 mb-4">
-                            {typeDescriptions[
-                              latestResult.mbti_type as keyof typeof typeDescriptions
-                            ]?.name || ""}
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {typeDescriptions[
-                              latestResult.mbti_type as keyof typeof typeDescriptions
-                            ]?.description || ""}
-                          </p>
+                    <div className="text-sm text-gray-700">
+                      <h3 className="font-medium mb-2">
+                        {typeDescriptions[latestMbtiType].name}
+                      </h3>
+                      <p className="mb-4">
+                        {typeDescriptions[latestMbtiType].description}
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium text-indigo-700 mb-2">
+                            長所
+                          </h4>
+                          <ul className="list-disc list-inside space-y-1">
+                            {typeDescriptions[latestMbtiType].strengths.map(
+                              (strength, i) => (
+                                <li key={i}>{strength}</li>
+                              )
+                            )}
+                          </ul>
                         </div>
-                      </div>
 
-                      <div className="md:w-2/3">
-                        <h3 className="text-lg font-medium mb-4">詳細スコア</h3>
-                        {latestResult &&
-                          typeof latestResult.e_score === "number" && (
-                            <>
-                              <ScoreBar
-                                left="内向型 (I)"
-                                right="外向型 (E)"
-                                value={latestResult.e_score}
-                                inverted
-                              />
-                              <ScoreBar
-                                left="現実型 (S)"
-                                right="直感型 (N)"
-                                value={latestResult.n_score}
-                              />
-                              <ScoreBar
-                                left="思考型 (T)"
-                                right="感情型 (F)"
-                                value={latestResult.f_score}
-                              />
-                              <ScoreBar
-                                left="認知型 (J)"
-                                right="探索型 (P)"
-                                value={latestResult.p_score}
-                              />
-                            </>
-                          )}
-
-                        <div className="flex justify-between mt-6">
-                          <Link href={`/test/history/${latestResult.id}`}>
-                            <Button variant="outline" size="sm">
-                              詳細を見る
-                            </Button>
-                          </Link>
-                          <Link href="/test">
-                            <Button variant="default" size="sm">
-                              新しいテストを受ける
-                            </Button>
-                          </Link>
+                        <div>
+                          <h4 className="font-medium text-indigo-700 mb-2">
+                            短所
+                          </h4>
+                          <ul className="list-disc list-inside space-y-1">
+                            {typeDescriptions[latestMbtiType].weaknesses.map(
+                              (weakness, i) => (
+                                <li key={i}>{weakness}</li>
+                              )
+                            )}
+                          </ul>
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ) : (
-                <Card className="p-8 text-center">
-                  <BarChart className="h-12 w-12 text-blue-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">
-                    まだ診断テストを受けていません
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    10分程度のテストであなたのMBTIタイプを診断しましょう
-                  </p>
-                  <div className="flex justify-center">
-                    <Link href="/test">
-                      <Button>診断テストを受ける</Button>
-                    </Link>
-                  </div>
+              )}
+
+              {/* お気に入りタイプ */}
+              {bookmarkedTypes && bookmarkedTypes.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center">
+                      <Star className="mr-2 h-5 w-5 text-yellow-500" />
+                      お気に入りタイプ
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {bookmarkedTypes.map((type) => (
+                        <div
+                          key={type}
+                          className="text-center p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="font-bold text-indigo-600">
+                            {type}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {typeDescriptions[type]?.name || ""}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
                 </Card>
               )}
+            </TabsContent>
 
-              {testResults && testResults.length > 1 && (
-                <div className="mt-6">
-                  <h3 className="text-xl font-semibold mb-4">過去の診断結果</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {testResults.slice(1, 5).map((result) => (
-                      <Link
-                        href={`/types/${result.mbti_type.toLowerCase()}`}
-                        key={result.id}
-                        className="border rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-lg">
-                            {result.mbti_type}
-                          </span>
-                          <FormattedDate
-                            date={result.created_at}
-                            className="text-sm text-gray-500"
-                          />
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {typeDescriptions[
-                            result.mbti_type as keyof typeof typeDescriptions
-                          ]?.name || ""}
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-                  {testResults.length > 5 && (
-                    <div className="text-center mt-4">
-                      <Link href="/test/history">
-                        <Button variant="link">すべての診断結果を見る</Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* お気に入りタブ */}
-          <TabsContent value="favorites">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  お気に入りタイプ
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bookmarkedTypes.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {bookmarkedTypes.map((type) => (
-                      <Link
-                        key={type}
-                        href={`/types/${type.toLowerCase()}`}
-                        className="block"
-                      >
-                        <div className="border rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all h-full">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xl font-bold text-blue-600">
-                              {type}
-                            </span>
-                            <span className="text-gray-600">
-                              {typeDescriptions[
-                                type as keyof typeof typeDescriptions
-                              ]?.name || ""}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {typeDescriptions[
-                              type as keyof typeof typeDescriptions
-                            ]?.description.substring(0, 120)}
-                            ...
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Star className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-                    <h3 className="text-lg font-medium mb-2">
-                      お気に入りに登録したタイプはありません
-                    </h3>
-                    <p className="text-gray-500 mb-4">
-                      タイプページでお気に入りに追加できます
-                    </p>
-                    <Link href="/types">
-                      <Button variant="outline">タイプ一覧を見る</Button>
-                    </Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* 詳細情報タブ */}
-          <TabsContent value="about">
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-              {/* ユーザー情報カード */}
-              <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 border-t-4 border-t-indigo-500">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <User className="h-5 w-5 text-indigo-500" />
-                    ユーザー情報
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="text-sm font-medium text-gray-500">
-                      表示名
-                    </h3>
-                    <p className="text-base font-medium text-gray-800 flex items-center gap-2">
-                      <BadgeCheck className="h-4 w-4 text-indigo-500" />
-                      {displayName}
-                    </p>
-                  </div>
-
-                  {handle && (
-                    <div className="flex flex-col gap-1">
-                      <h3 className="text-sm font-medium text-gray-500">
-                        ユーザーID
-                      </h3>
-                      <p className="text-base text-gray-800 flex items-center gap-2">
-                        <AtSign className="h-4 w-4 text-indigo-500" />@{handle}
-                      </p>
-                    </div>
-                  )}
-
-                  {profileData.bio && (
-                    <div className="flex flex-col gap-1">
-                      <h3 className="text-sm font-medium text-gray-500">
-                        自己紹介
-                      </h3>
-                      <div className="bg-gray-50 p-3 rounded-md text-gray-700 italic border-l-2 border-indigo-300">
-                        "{profileData.bio}"
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-2">
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">
-                      アカウント作成日
-                    </h3>
-                    <div className="flex items-center text-gray-700">
-                      <Calendar className="h-4 w-4 mr-2 text-indigo-500" />
-                      <FormattedDate
-                        date={profileData.created_at}
-                        format="full"
-                      />
-                    </div>
+            <TabsContent value="posts">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center py-12 text-gray-500">
+                    <p>投稿機能は準備中です</p>
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
 
-              {/* 活動統計カード */}
-              <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 border-t-4 border-t-green-500">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-green-50">
-                  <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <BarChart className="h-5 w-5 text-green-500" />
-                    活動統計
+            <TabsContent value="test">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <Activity className="mr-2 h-5 w-5 text-indigo-500" />
+                    診断結果
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="border rounded-lg p-5 text-center bg-gray-50">
-                    <div className="text-3xl font-bold text-indigo-600 mb-2">
-                      {testResults?.length || 0}
+                <CardContent>
+                  <div className="mb-4 flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center">
+                      <BarChart className="text-indigo-500 h-5 w-5 mr-2" />
+                      <span>合計診断回数</span>
                     </div>
-                    <p className="text-sm text-gray-600">診断テスト回数</p>
+                    <span className="font-semibold text-lg text-indigo-600">
+                      {testCount || 0}回
+                    </span>
                   </div>
 
+                  {/* 既存のテスト結果表示を保持 */}
                   {latestResult && (
-                    <div className="border rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-gray-600 mb-2 flex items-center">
-                        <Activity className="h-4 w-4 mr-1 text-indigo-500" />
-                        最新の診断タイプ
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-semibold text-indigo-600">
-                          {latestResult.mbti_type}
-                        </span>
-                        <FormattedDate
-                          date={latestResult.created_at}
-                          className="text-xs text-gray-500"
-                        />
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">
+                          最新の診断結果
+                        </h3>
+                        <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-lg font-bold text-indigo-600">
+                              {latestResult.mbti_type}
+                            </span>
+                            <FormattedDate
+                              date={latestResult.created_at}
+                              className="text-xs text-gray-500"
+                            />
+                          </div>
+
+                          <p className="text-sm mb-6">
+                            {
+                              typeDescriptions[latestResult.mbti_type]
+                                ?.description
+                            }
+                          </p>
+
+                          <div className="space-y-4">
+                            <div>
+                              <ScoreBar
+                                left="内向型"
+                                right="外向型"
+                                value={latestResult.e_score}
+                              />
+                            </div>
+                            <div>
+                              <ScoreBar
+                                left="現実型"
+                                right="直感型"
+                                value={latestResult.n_score}
+                              />
+                            </div>
+                            <div>
+                              <ScoreBar
+                                left="論理型"
+                                right="感情型"
+                                value={latestResult.f_score}
+                              />
+                            </div>
+                            <div>
+                              <ScoreBar
+                                left="計画型"
+                                right="探索型"
+                                value={latestResult.p_score}
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* 以前の診断結果や他のコンテンツも表示 */}
+                      {testResults && testResults.length > 1 && (
+                        <div className="mt-6">
+                          <h3 className="text-sm font-medium text-gray-700 mb-2">
+                            以前の診断結果
+                          </h3>
+                          <div className="space-y-2">
+                            {testResults.slice(1, 5).map((result, index) => (
+                              <div
+                                key={index}
+                                className="p-3 bg-gray-50 rounded-lg flex justify-between items-center"
+                              >
+                                <div className="flex items-center">
+                                  <div className="w-8 h-8 flex items-center justify-center bg-indigo-100 text-indigo-800 rounded-full mr-3 font-medium">
+                                    {result.mbti_type.slice(0, 2)}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">
+                                      {result.mbti_type}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      <FormattedDate date={result.created_at} />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  <Link href="/test" className="block">
+                  <Link href="/test" className="block mt-6">
                     <Button variant="outline" className="w-full">
                       <PlusCircle className="h-4 w-4 mr-2" />
                       新しい診断テストを受ける
@@ -497,29 +487,41 @@ export default async function ProfilePage() {
                   </Link>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     );
   } catch (error) {
     console.error("プロフィールページエラー:", error);
+
     return (
-      <div className="container max-w-6xl px-4 py-16 text-center">
+      <div className="container mx-auto max-w-4xl px-4 py-8 text-center">
         <h1 className="text-2xl font-bold mb-4">エラーが発生しました</h1>
         <p className="text-gray-600 mb-8">
-          プロフィールの読み込み中にエラーが発生しました。
-          再度お試しいただくか、問題が続く場合はサポートまでご連絡ください。
+          プロフィールの読み込み中にエラーが発生しました
         </p>
-        <Button asChild>
-          <Link href="/">ホームに戻る</Link>
-        </Button>
+
+        {/* 開発環境のみエラー詳細を表示 */}
+        {DEBUG_MODE && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded text-left">
+            <h2 className="font-bold text-red-800 mb-2">エラー詳細:</h2>
+            <pre className="text-xs overflow-auto p-2 bg-white border border-red-100 rounded">
+              {JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}
+            </pre>
+          </div>
+        )}
+
+        <div className="mt-6">
+          <Link href="/" className="text-blue-500 hover:underline">
+            ホームに戻る
+          </Link>
+        </div>
       </div>
     );
   }
 }
 
-// スコアバーコンポーネント
 function ScoreBar({
   left,
   right,

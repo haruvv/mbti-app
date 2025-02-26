@@ -27,72 +27,38 @@ export async function GET(request: Request) {
     }
   }
 
-  // ユーザー検索クエリ
-  const { data: users, error } = await supabase
-    .from("users")
-    .select(
-      `
-      id,
-      handle,
-      display_name,
-      user_profiles!left (
-        display_name,
-        custom_image_url
-      )
-    `
-    )
-    .or(`handle.ilike.%${query}%,display_name.ilike.%${query}%`)
-    .limit(10);
+  try {
+    // RPC関数を使用した検索
+    const { data, error } = await supabase.rpc("search_users", {
+      p_search_term: query,
+      p_current_user_id: currentUserId,
+      p_limit: 10,
+      p_offset: 0,
+    });
 
-  if (error) {
+    if (error) {
+      console.error("RPC search error:", error);
+
+      // RPCが利用できない場合はフォールバック
+      const { data: users, error: fallbackError } = await supabase
+        .from("user_profiles")
+        .select("user_id, handle, display_name, custom_image_url")
+        .or(`handle.ilike.%${query}%,display_name.ilike.%${query}%`)
+        .limit(10);
+
+      if (fallbackError) {
+        return NextResponse.json(
+          { error: "検索に失敗しました" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ users });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
     console.error("Search error:", error);
     return NextResponse.json({ error: "検索に失敗しました" }, { status: 500 });
   }
-
-  // user_profilesのdisplay_nameでの検索を別途実行
-  const { data: profileUsers, error: profileError } = await supabase
-    .from("users")
-    .select(
-      `
-      id,
-      handle,
-      display_name,
-      user_profiles!inner (
-        display_name,
-        custom_image_url
-      )
-    `
-    )
-    .ilike("user_profiles.display_name", `%${query}%`)
-    .limit(10);
-
-  if (profileError) {
-    console.error("Profile search error:", profileError);
-  }
-
-  // 両方の結果をマージして重複を除去
-  const allUsers = [...(users || []), ...(profileUsers || [])];
-  const uniqueUsers = allUsers.filter(
-    (user, index, self) =>
-      index === self.findIndex((u) => u.handle === user.handle)
-  );
-
-  // ログインしている場合、フォロー状態を確認
-  if (currentUserId) {
-    // フォロー状態を一括で取得
-    const { data: followData } = await supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", currentUserId);
-
-    const followingIds = followData?.map((f) => f.following_id) || [];
-
-    // フォロー状態と自分自身かどうかの情報を各ユーザーに追加
-    uniqueUsers.forEach((user) => {
-      user.is_following = followingIds.includes(user.id);
-      user.is_current_user = user.id === currentUserId;
-    });
-  }
-
-  return NextResponse.json({ users: uniqueUsers });
 }

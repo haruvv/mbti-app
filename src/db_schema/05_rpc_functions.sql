@@ -489,4 +489,72 @@ BEGIN
 
     RETURN v_result;
 END;
+$$;
+
+-- ユーザー検索RPC関数
+CREATE OR REPLACE FUNCTION search_users(
+    p_search_term TEXT,
+    p_current_user_id UUID DEFAULT NULL,
+    p_limit INTEGER DEFAULT 10,
+    p_offset INTEGER DEFAULT 0
+)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_result json;
+    v_count INTEGER;
+BEGIN
+    -- 検索条件に合致するユーザー数をカウント
+    SELECT COUNT(*) INTO v_count
+    FROM user_profiles up
+    JOIN users u ON up.user_id = u.id
+    WHERE 
+        up.handle ILIKE '%' || p_search_term || '%' OR
+        up.display_name ILIKE '%' || p_search_term || '%';
+    
+    -- 検索結果を取得
+    SELECT json_agg(u) INTO v_result
+    FROM (
+        SELECT 
+            up.user_id AS id,
+            up.handle,
+            up.display_name,
+            up.custom_image_url,
+            up.preferred_mbti,
+            CASE WHEN p_current_user_id IS NOT NULL THEN
+                EXISTS(
+                    SELECT 1 FROM follows f
+                    WHERE f.follower_id = p_current_user_id AND f.following_id = up.user_id
+                )
+            ELSE
+                FALSE
+            END AS is_following,
+            (p_current_user_id IS NOT NULL AND p_current_user_id = up.user_id) AS is_current_user
+        FROM user_profiles up
+        JOIN users u ON up.user_id = u.id
+        WHERE 
+            up.handle ILIKE '%' || p_search_term || '%' OR
+            up.display_name ILIKE '%' || p_search_term || '%'
+        ORDER BY 
+            -- 完全一致を優先
+            CASE 
+                WHEN up.handle = p_search_term THEN 0
+                WHEN up.handle ILIKE p_search_term THEN 1
+                WHEN up.handle ILIKE p_search_term || '%' THEN 2
+                ELSE 3
+            END,
+            -- プロフィールの完成度の高いユーザーを優先
+            (up.bio IS NOT NULL AND up.custom_image_url IS NOT NULL) DESC,
+            up.handle ASC
+        LIMIT p_limit
+        OFFSET p_offset
+    ) u;
+    
+    RETURN json_build_object(
+        'users', COALESCE(v_result, '[]'::json),
+        'total_count', v_count
+    );
+END;
 $$; 
