@@ -4,100 +4,142 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 
 export async function POST(req: Request) {
-  console.log("Webhook received");
+  // Webhookシークレットを取得
+  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
-  try {
-    // リクエストボディを文字列として取得
-    const rawBody = await req.text();
-    const body = JSON.parse(rawBody);
-    const headersList = headers();
-    const supabase = createClient();
-
-    // Webhookヘッダーを取得
-    const svixId = headersList.get("svix-id");
-    const svixTimestamp = headersList.get("svix-timestamp");
-    const svixSignature = headersList.get("svix-signature");
-
-    if (!svixId || !svixTimestamp || !svixSignature) {
-      console.error("Missing webhook headers");
-      return Response.json(
-        { success: false, error: "Missing webhook headers" },
-        { status: 400 }
-      );
-    }
-
-    console.log("Webhook headers:", {
-      "svix-id": svixId,
-      "svix-timestamp": svixTimestamp,
-      "svix-signature": svixSignature.substring(0, 10) + "...",
-    });
-
-    // 環境変数の確認
-    if (!process.env.CLERK_WEBHOOK_SECRET) {
-      console.error("CLERK_WEBHOOK_SECRET is not set");
-      return Response.json(
-        { success: false, error: "Webhook secret not configured" },
-        { status: 500 }
-      );
-    }
-
-    console.log("Webhook raw body:", rawBody);
-
-    const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    const evt = (await wh.verify(rawBody, {
-      "svix-id": svixId,
-      "svix-timestamp": svixTimestamp,
-      "svix-signature": svixSignature,
-    })) as WebhookEvent;
-
-    console.log("Webhook event type:", evt.type);
-
-    if (evt.type === "user.created" || evt.type === "user.updated") {
-      const { id, email_addresses, first_name, last_name } = evt.data;
-      const primaryEmail = email_addresses.find(
-        (email) => email.id === evt.data.primary_email_address_id
-      )?.email_address;
-
-      if (!primaryEmail) {
-        console.error("No primary email found");
-        return Response.json(
-          { success: false, error: "No primary email found" },
-          { status: 400 }
-        );
-      }
-
-      // トランザクションを使用してユーザーとプロフィールを作成
-      const { data, error } = await supabase.rpc("create_user_with_profile", {
-        p_clerk_id: id,
-        p_email: primaryEmail,
-        p_display_name:
-          [first_name, last_name].filter(Boolean).join(" ") || null,
-      });
-
-      if (error) {
-        console.error("Supabase insert error:", error);
-        return Response.json(
-          { success: false, error: error.message },
-          { status: 500 }
-        );
-      }
-
-      console.log("User and profile successfully created:", data);
-      return Response.json({ success: true, data });
-    }
-
-    return Response.json({
-      success: true,
-      message: "Non-user event processed",
-    });
-  } catch (err) {
-    console.error("Webhook error:", err);
-    return Response.json(
-      {
-        success: false,
-        error: err instanceof Error ? err.message : "Unknown error",
-      },
-      { status: 500 }
+  if (!WEBHOOK_SECRET) {
+    throw new Error(
+      "Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env file"
     );
   }
+
+  // リクエストの検証
+  const headerPayload = headers();
+  const svix_id = headerPayload.get("svix-id");
+  const svix_timestamp = headerPayload.get("svix-timestamp");
+  const svix_signature = headerPayload.get("svix-signature");
+
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return new Response("Error occurred -- no svix headers", {
+      status: 400,
+    });
+  }
+
+  // リクエストボディを取得
+  const payload = await req.json();
+  const body = JSON.stringify(payload);
+
+  // Webhookの検証
+  const wh = new Webhook(WEBHOOK_SECRET);
+  let evt: WebhookEvent;
+
+  try {
+    evt = wh.verify(body, {
+      "svix-id": svix_id,
+      "svix-timestamp": svix_timestamp,
+      "svix-signature": svix_signature,
+    }) as WebhookEvent;
+  } catch (err) {
+    console.error("Error verifying webhook:", err);
+    return new Response("Error occurred", {
+      status: 400,
+    });
+  }
+
+  const supabase = createClient();
+
+  // イベントタイプに基づいて処理
+  const eventType = evt.type;
+
+  if (eventType === "user.created" || eventType === "user.updated") {
+    const { id, email_addresses } = evt.data;
+
+    // メールアドレスの取得（必須）
+    const email =
+      email_addresses && email_addresses.length > 0
+        ? email_addresses[0].email_address
+        : "dummy@example.com"; // フォールバック
+
+    try {
+      // usersテーブルのみ更新（認証連携用の最小限の情報）
+      const { data, error: userError } = await supabase.from("users").upsert(
+        {
+          clerk_id: id,
+          email: email,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "clerk_id", returning: "minimal" }
+      );
+
+      if (userError) throw userError;
+
+      // ユーザーIDを取得
+      const { data: user, error: getUserError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("clerk_id", id)
+        .single();
+
+      if (getUserError) throw getUserError;
+
+      // 初回作成時のみ基本的なプロフィールを作成
+      // 既存のプロフィールは上書きしない（ユーザーが後でプロフィール編集で設定）
+      const { data: existingProfile } = await supabase
+        .from("user_profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        // 初期プロフィールの作成（最小限）
+        const { error: profileError } = await supabase
+          .from("user_profiles")
+          .insert({
+            user_id: user.id,
+            display_name: "ゲスト", // デフォルト名
+          });
+
+        if (profileError) throw profileError;
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error syncing user:", error);
+      return new Response(JSON.stringify({ error: JSON.stringify(error) }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  if (eventType === "user.deleted") {
+    const userId = evt.data.id;
+
+    try {
+      // Clerkユーザーが削除された場合、関連するSupabaseのユーザーを削除
+      // CASCADEでuser_profilesとtest_resultsも削除される
+      const { error: deleteError } = await supabase
+        .from("users")
+        .delete()
+        .eq("clerk_id", userId);
+
+      if (deleteError) throw deleteError;
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return new Response(JSON.stringify({ error: JSON.stringify(error) }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  return new Response("", { status: 200 });
 }

@@ -24,9 +24,17 @@ import {
 import { cn } from "@/lib/utils";
 import UserSearch from "@/components/UserSearch";
 
+// プロフィールタイプの定義（必要に応じて）
+type Profile = {
+  display_name?: string;
+  custom_image_url?: string;
+  // 他のプロフィール情報
+};
+
 export default function Header() {
-  const { user } = useUser();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { user, isSignedIn } = useUser();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -35,7 +43,26 @@ export default function Header() {
       if (data) setProfile(data);
     }
     fetchProfile();
-  }, [user]);
+  }, [isSignedIn]);
+
+  const getProfileImageUrl = () => {
+    if (profile?.custom_image_url && profile.custom_image_url.trim() !== "") {
+      return profile.custom_image_url;
+    }
+    // デフォルト画像を使用
+    return "/images/default-avatar.png";
+  };
+
+  // イニシャルを取得する関数を追加
+  const getInitial = () => {
+    if (profile?.display_name) {
+      return profile.display_name.charAt(0).toUpperCase();
+    }
+    if (user?.firstName) {
+      return user.firstName.charAt(0).toUpperCase();
+    }
+    return "U";
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
@@ -85,14 +112,21 @@ export default function Header() {
                   "text-sm font-medium text-muted-foreground hover:text-foreground"
                 )}
               >
-                <div className="relative size-7 overflow-hidden rounded-full ring-2 ring-background group-hover:ring-foreground/20 transition-all">
+                {loading ? (
+                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+                ) : profile?.custom_image_url ? (
                   <Image
-                    src={profile?.custom_image_url || user?.imageUrl || ""}
+                    src={profile.custom_image_url}
                     alt="プロフィール"
-                    fill
-                    className="object-cover"
+                    width={32}
+                    height={32}
+                    className="rounded-full"
                   />
-                </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium">
+                    {getInitial()}
+                  </div>
+                )}
                 <span className="inline-block max-w-[100px] truncate">
                   {profile?.display_name || user?.firstName || "ゲスト"}
                 </span>

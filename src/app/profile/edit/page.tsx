@@ -1,69 +1,712 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { getUserProfile } from "@/app/_actions/profile";
-import { typeDescriptions } from "@/app/data/mbtiTypes";
-import { getTestResults } from "@/app/_actions/test";
-import { ProfileForm } from "./ProfileForm";
-import { createClient } from "@/lib/supabase/server";
+"use client";
 
-export default async function EditProfilePage() {
-  const user = await currentUser();
-  if (!user) redirect("/");
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { Camera, Save, Loader2, X, AlertCircle, Info } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { toast } from "sonner";
+import { updateProfile } from "@/app/_actions/profile";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-  const { data: profile, error: profileError } = await getUserProfile(user.id);
-  const { data: results } = await getTestResults();
+export default function ProfileEditPage() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [handleError, setHandleError] = useState("");
+  const [isHandleDisabled, setIsHandleDisabled] = useState(false);
+  const [daysTillHandleChange, setDaysTillHandleChange] = useState(0);
 
-  // 最新の診断結果を取得
-  const latestResult = results && results.length > 0 ? results[0] : null;
+  const [formData, setFormData] = useState({
+    displayName: "",
+    bio: "",
+    mbtiType: "",
+    favoriteTypes: [] as string[],
+    socialLinks: {
+      twitter: "",
+      instagram: "",
+      website: "",
+    },
+    customImageUrl: "",
+    handle: "",
+  });
 
-  // 全てのMBTIタイプを選択肢として使用
-  const mbtiOptions = Object.entries(typeDescriptions).map(([type, data]) => ({
-    type,
-    title: data.title,
-  }));
+  const [error, setError] = useState<string | null>(null);
+  const [socialLinkErrors, setSocialLinkErrors] = useState({
+    twitter: "",
+    instagram: "",
+    website: "",
+  });
 
-  // getUserProfileの呼び出し後に、usersテーブルからhandleも取得
-  const supabase = createClient();
-  const { data: userData } = await supabase
-    .from("users")
-    .select("handle")
-    .eq("clerk_id", user.id)
-    .single();
+  // ページ読み込み時のデータ取得
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!user) return;
 
-  if (profileError) {
+      try {
+        const response = await fetch("/api/profile");
+        if (!response.ok) throw new Error("プロフィールの取得に失敗しました");
+
+        const data = await response.json();
+        setFormData({
+          displayName: data.display_name || "",
+          bio: data.bio || "",
+          mbtiType: data.preferred_mbti || "",
+          favoriteTypes: data.bookmarked_types || [],
+          socialLinks: {
+            twitter: data.social_links?.twitter || "",
+            instagram: data.social_links?.instagram || "",
+            website: data.social_links?.website || "",
+          },
+          customImageUrl: data.custom_image_url || "",
+          handle: data.handle || "",
+        });
+
+        // ハンドル変更制限をチェック
+        if (data.handle_updated_at) {
+          const lastUpdate = new Date(data.handle_updated_at);
+          const daysSince = Math.floor(
+            (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          const daysRemaining = 14 - daysSince;
+
+          if (daysRemaining > 0) {
+            setIsHandleDisabled(true);
+            setDaysTillHandleChange(daysRemaining);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "プロフィールの取得に失敗しました"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (isLoaded) {
+      fetchProfile();
+    }
+  }, [user, isLoaded]);
+
+  // 入力値変更ハンドラー
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+
+    if (name === "handle") {
+      // handleバリデーション
+      const isValid = /^[a-zA-Z0-9_]{1,15}$/.test(value);
+
+      if (!isValid && value) {
+        setHandleError("ユーザーIDは1-15文字の半角英数字と_のみ使用できます");
+      } else {
+        setHandleError("");
+      }
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // MBTIタイプ変更ハンドラー
+  const handleMbtiChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData((prev) => ({ ...prev, mbtiType: e.target.value }));
+  };
+
+  // お気に入りタイプ選択ハンドラー
+  const toggleFavoriteType = (typeId: string) => {
+    setFormData((prev) => {
+      const types = [...prev.favoriteTypes];
+      if (types.includes(typeId)) {
+        return {
+          ...prev,
+          favoriteTypes: types.filter((id) => id !== typeId),
+        };
+      } else {
+        if (types.length >= 5) {
+          toast.error("お気に入りは最大5つまで登録できます");
+          return prev;
+        }
+        return {
+          ...prev,
+          favoriteTypes: [...types, typeId],
+        };
+      }
+    });
+  };
+
+  // ソーシャルリンク変更ハンドラー
+  const handleSocialLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      socialLinks: {
+        ...prev.socialLinks,
+        [name]: value,
+      },
+    }));
+  };
+
+  // 画像選択ボタンクリック時のハンドラー
+  const handleImageButtonClick = () => {
+    console.log("画像選択ボタンがクリックされました");
+    // ファイル選択ダイアログを表示する
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    } else {
+      console.error("fileInputRef is null");
+    }
+  };
+
+  // ファイル選択時のハンドラー
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("ファイルが選択されました");
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+
+    if (file.size > maxSizeInBytes) {
+      toast.error("ファイルサイズは5MB以下にしてください");
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "画像のアップロードに失敗しました");
+      }
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || "画像のアップロードに失敗しました");
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        customImageUrl: data.url,
+      }));
+
+      toast.success("画像をアップロードしました");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "画像のアップロードに失敗しました"
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // 画像削除ハンドラー
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({
+      ...prev,
+      customImageUrl: "",
+    }));
+    toast.success("画像を削除しました");
+  };
+
+  // ソーシャルリンクのバリデーション
+  const validateSocialLinks = () => {
+    let isValid = true;
+    const errors = {
+      twitter: "",
+      instagram: "",
+      website: "",
+    };
+
+    // Twitter (X)
+    if (
+      formData.socialLinks.twitter &&
+      !formData.socialLinks.twitter.startsWith("https://x.com/")
+    ) {
+      errors.twitter = "TwitterのURLはhttps://x.com/で始まる必要があります";
+      isValid = false;
+    }
+
+    // Instagram
+    if (
+      formData.socialLinks.instagram &&
+      !formData.socialLinks.instagram.startsWith("https://instagram.com/")
+    ) {
+      errors.instagram =
+        "InstagramのURLはhttps://instagram.com/で始まる必要があります";
+      isValid = false;
+    }
+
+    setSocialLinkErrors(errors);
+    return isValid;
+  };
+
+  // handleのバリデーション
+  const validateHandle = () => {
+    // 既に他のバリデーションでエラーがある場合
+    if (handleError) return false;
+
+    // 空の場合は許可（必須ではない）
+    if (!formData.handle) return true;
+
+    // 半角英数字とアンダースコアのみ、1-15文字
+    return /^[a-zA-Z0-9_]{1,15}$/.test(formData.handle);
+  };
+
+  // フォーム送信
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // ソーシャルリンクのバリデーション
+    if (!validateSocialLinks()) {
+      return;
+    }
+
+    // handleのバリデーション
+    if (!validateHandle()) {
+      toast.error("ユーザーIDのフォーマットが不正です");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const submitData = new FormData();
+      submitData.append("displayName", formData.displayName);
+      submitData.append("bio", formData.bio);
+      submitData.append("mbtiType", formData.mbtiType);
+      submitData.append("customImageUrl", formData.customImageUrl);
+      submitData.append(
+        "favoriteTypes",
+        JSON.stringify(formData.favoriteTypes)
+      );
+      submitData.append("socialLinks", JSON.stringify(formData.socialLinks));
+
+      // handleを追加
+      submitData.append("handle", formData.handle);
+
+      const result = await updateProfile(submitData);
+
+      if (!result.success) {
+        throw new Error(result.error || "更新に失敗しました");
+      }
+
+      toast.success("プロフィールを更新しました");
+      router.push("/profile");
+      router.refresh();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setError(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // プロフィール画像のURL取得関数
+  const getProfileImageUrl = () => {
+    // カスタム画像が設定されている場合は、それを優先
+    if (formData.customImageUrl && formData.customImageUrl.trim() !== "") {
+      return formData.customImageUrl;
+    }
+
+    // デフォルト画像を使用
+    return "/images/default-avatar.png";
+  };
+
+  // MBTIタイプの一覧
+  const mbtiTypes = [
+    "INTJ",
+    "INTP",
+    "ENTJ",
+    "ENTP",
+    "INFJ",
+    "INFP",
+    "ENFJ",
+    "ENFP",
+    "ISTJ",
+    "ISFJ",
+    "ESTJ",
+    "ESFJ",
+    "ISTP",
+    "ISFP",
+    "ESTP",
+    "ESFP",
+  ];
+
+  if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
-        <div className="container mx-auto max-w-2xl pt-8">
-          <div className="bg-white rounded-xl p-6 text-red-600">
-            プロフィールの取得に失敗しました。
-          </div>
-        </div>
+      <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
-      <div className="container mx-auto max-w-2xl pt-8">
-        <div className="glass-effect rounded-xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6">
-            <h1 className="text-2xl font-bold text-white">プロフィール設定</h1>
-          </div>
-          <div className="p-6">
-            <ProfileForm
-              userId={user.id}
-              initialData={{
-                displayName: profile?.display_name || "",
-                imageUrl: profile?.custom_image_url || user.imageUrl,
-                preferredMbti: latestResult?.mbti_type || null,
-                bio: profile?.bio || "",
-                bookmarkedTypes: profile?.bookmarked_types || [],
-                handle: userData?.handle || "",
-              }}
-              mbtiOptions={mbtiOptions}
-              latestMbtiType={latestResult?.mbti_type || null}
-            />
-          </div>
+    <div className="bg-gray-50 min-h-screen py-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">プロフィール編集</h1>
+          <Link
+            href="/profile"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+          >
+            プロフィールに戻る
+          </Link>
+        </div>
+
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <form onSubmit={handleSubmit}>
+            <div className="p-6">
+              {/* プロフィール画像 */}
+              <div className="mb-6 flex flex-col items-center">
+                <div
+                  className="relative w-24 h-24 rounded-full overflow-hidden mb-2 cursor-pointer group"
+                  onClick={handleImageButtonClick}
+                >
+                  {isLoading || isUploading ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+                      {isUploading && (
+                        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                      )}
+                    </div>
+                  ) : formData.customImageUrl ? (
+                    <>
+                      <Image
+                        src={formData.customImageUrl}
+                        alt="プロフィール画像"
+                        width={96}
+                        height={96}
+                        className="object-cover w-full h-full"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Camera className="w-6 h-6 text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-full h-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+                        {formData.displayName
+                          ? formData.displayName.charAt(0).toUpperCase()
+                          : "U"}
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Camera className="w-6 h-6 text-white" />
+                      </div>
+                    </>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                  id="profile-image-upload"
+                />
+                <p className="text-sm text-gray-500 mb-2">
+                  クリックして画像を変更
+                </p>
+
+                {formData.customImageUrl && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="w-4 h-4 mr-1" /> 画像を削除
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* 表示名 */}
+              <div className="mb-4">
+                <label
+                  htmlFor="displayName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  表示名
+                </label>
+                <input
+                  type="text"
+                  id="displayName"
+                  name="displayName"
+                  value={formData.displayName}
+                  onChange={handleInputChange}
+                  maxLength={30}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="あなたの名前（30文字以内）"
+                />
+              </div>
+
+              {/* ユーザーID (handle) */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <label
+                    htmlFor="handle"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    ユーザーID
+                  </label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-gray-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          検索やプロフィールURLに使用される一意のID
+                          <br />
+                          半角英数字とアンダースコア(_)のみ使用可
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="handle"
+                    name="handle"
+                    value={formData.handle}
+                    onChange={handleInputChange}
+                    disabled={isHandleDisabled}
+                    maxLength={15}
+                    className={`w-full px-3 py-2 border ${
+                      handleError ? "border-red-500" : "border-gray-300"
+                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+                      isHandleDisabled ? "bg-gray-100 text-gray-500" : ""
+                    }`}
+                    placeholder="例: mbti_lover123"
+                  />
+                  {isHandleDisabled && (
+                    <div className="mt-1 text-sm text-amber-600 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                      あと{daysTillHandleChange}日間は変更できません
+                      (14日に1回のみ変更可能)
+                    </div>
+                  )}
+                  {handleError && (
+                    <div className="mt-1 text-sm text-red-600 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                      {handleError}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 自己紹介 */}
+              <div className="mb-4">
+                <label
+                  htmlFor="bio"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  自己紹介
+                </label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  rows={3}
+                  maxLength={300}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="あなたについて教えてください（300文字以内）"
+                ></textarea>
+                <div className="mt-1 text-right text-xs text-gray-500">
+                  {formData.bio.length}/300
+                </div>
+              </div>
+
+              {/* MBTIタイプ */}
+              <div className="mb-4">
+                <label
+                  htmlFor="mbtiType"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  MBTIタイプ
+                </label>
+                <select
+                  id="mbtiType"
+                  name="mbtiType"
+                  value={formData.mbtiType}
+                  onChange={handleMbtiChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">選択してください</option>
+                  {mbtiTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* お気に入りタイプ */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  お気に入りのMBTIタイプ
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {mbtiTypes.map((type) => (
+                    <label key={type} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={formData.favoriteTypes.includes(type)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setFormData((prev) => ({
+                            ...prev,
+                            favoriteTypes: checked
+                              ? [...prev.favoriteTypes, type]
+                              : prev.favoriteTypes.filter((t) => t !== type),
+                          }));
+                        }}
+                      />
+                      <span>{type}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* ソーシャルリンク */}
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  ソーシャルリンク
+                </h3>
+
+                {/* Twitter */}
+                <div className="mb-3">
+                  <label
+                    htmlFor="twitter"
+                    className="block text-sm text-gray-600 mb-1"
+                  >
+                    Twitter
+                  </label>
+                  <input
+                    type="url"
+                    id="twitter"
+                    name="twitter"
+                    value={formData.socialLinks.twitter}
+                    onChange={handleSocialLinkChange}
+                    className={`w-full px-3 py-2 border ${
+                      socialLinkErrors.twitter
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                    placeholder="https://x.com/yourusername"
+                  />
+                  {socialLinkErrors.twitter && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {socialLinkErrors.twitter}
+                    </p>
+                  )}
+                </div>
+
+                {/* Instagram */}
+                <div className="mb-3">
+                  <label
+                    htmlFor="instagram"
+                    className="block text-sm text-gray-600 mb-1"
+                  >
+                    Instagram
+                  </label>
+                  <input
+                    type="url"
+                    id="instagram"
+                    name="instagram"
+                    value={formData.socialLinks.instagram}
+                    onChange={handleSocialLinkChange}
+                    className={`w-full px-3 py-2 border ${
+                      socialLinkErrors.instagram
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                    placeholder="https://instagram.com/yourusername"
+                  />
+                  {socialLinkErrors.instagram && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {socialLinkErrors.instagram}
+                    </p>
+                  )}
+                </div>
+
+                {/* Webサイト */}
+                <div>
+                  <label
+                    htmlFor="website"
+                    className="block text-sm text-gray-600 mb-1"
+                  >
+                    Webサイト
+                  </label>
+                  <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    value={formData.socialLinks.website}
+                    onChange={handleSocialLinkChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="https://yourwebsite.com"
+                  />
+                </div>
+              </div>
+
+              {/* エラーメッセージ */}
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              {/* 送信ボタン */}
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center"
+                >
+                  {isSubmitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  <Save className="w-4 h-4 mr-2" />
+                  保存する
+                </Button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>

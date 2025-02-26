@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,7 +11,23 @@ export async function GET(request: Request) {
   }
 
   const supabase = createClient();
+  const { userId } = auth();
 
+  // ログインユーザーのSupabase IDを取得
+  let currentUserId = null;
+  if (userId) {
+    const { data: currentUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", userId)
+      .single();
+
+    if (currentUser) {
+      currentUserId = currentUser.id;
+    }
+  }
+
+  // ユーザー検索クエリ
   const { data: users, error } = await supabase
     .from("users")
     .select(
@@ -59,6 +76,23 @@ export async function GET(request: Request) {
     (user, index, self) =>
       index === self.findIndex((u) => u.handle === user.handle)
   );
+
+  // ログインしている場合、フォロー状態を確認
+  if (currentUserId) {
+    // フォロー状態を一括で取得
+    const { data: followData } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", currentUserId);
+
+    const followingIds = followData?.map((f) => f.following_id) || [];
+
+    // フォロー状態と自分自身かどうかの情報を各ユーザーに追加
+    uniqueUsers.forEach((user) => {
+      user.is_following = followingIds.includes(user.id);
+      user.is_current_user = user.id === currentUserId;
+    });
+  }
 
   return NextResponse.json({ users: uniqueUsers });
 }

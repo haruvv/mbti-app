@@ -5,130 +5,127 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import type { MBTIType, TestResult } from "@/types/mbti";
+import { MBTITypeKey } from "../data/mbtiTypes";
 
-export async function getTestResults(): Promise<{
-  success: boolean;
-  data?: TestResult[];
-  error?: string;
-}> {
+export async function getTestResults() {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("ユーザーが見つかりません");
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      return { success: false, error: "ログインが必要です" };
     }
 
     const supabase = createClient();
 
-    // まずユーザーのUUIDを取得
-    let { data: userData, error: userError } = await supabase
+    // ClerkIDからユーザー情報を取得
+    const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id")
-      .eq("clerk_id", user.id)
+      .eq("clerk_id", clerkUser.id)
       .single();
 
     if (userError) {
       console.error("User fetch error:", userError);
-      throw new Error(`ユーザー情報の取得に失敗: ${userError.message}`);
+      // エラーをスローするのではなく、エラー結果を返す
+      return { success: false, error: "ユーザー情報の取得に失敗しました" };
     }
 
     if (!userData) {
-      // ユーザーが存在しない場合は新規作成
+      // ユーザーが見つからない場合も、エラー結果を返す
+      return { success: false, error: "ユーザーが見つかりません" };
+    }
+
+    // テスト結果を取得（created_atカラムによるソートを削除）
+    const { data: testResults, error: testError } = await supabase
+      .from("test_results")
+      .select("*")
+      .eq("user_id", userData.id)
+      .order("id", { ascending: false }); // idでソートに変更
+
+    if (testError) {
+      console.error("Test results fetch error:", testError);
+      return { success: false, error: "テスト結果の取得に失敗しました" };
+    }
+
+    // テスト結果がない場合でも空の配列を返す
+    return { success: true, data: testResults || [] };
+  } catch (error) {
+    console.error("Error in getTestResults:", error);
+    return { success: false, error: "テスト結果の取得に失敗しました" };
+  }
+}
+
+export async function saveTestResult(formData: FormData) {
+  try {
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      throw new Error("ログインが必要です");
+    }
+
+    const mbtiType = formData.get("mbtiType") as MBTITypeKey;
+
+    // MBTIタイプのバリデーション
+    if (!mbtiType || !/^[EI][NS][TF][JP]$/.test(mbtiType)) {
+      throw new Error("無効なMBTIタイプです");
+    }
+
+    const supabase = createClient();
+
+    // まずClerkのIDに対応するSupabaseのユーザーIDを取得
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", clerkUser.id)
+      .single();
+
+    if (userError) {
+      console.error("User fetch error:", userError);
+      throw new Error("ユーザー情報の取得に失敗しました");
+    }
+
+    // ユーザーが存在しない場合は作成
+    if (!userData) {
       const { data: newUser, error: createError } = await supabase
         .from("users")
-        .insert({ clerk_id: user.id })
+        .insert({ clerk_id: clerkUser.id })
         .select()
         .single();
 
       if (createError) {
         console.error("User creation error:", createError);
-        throw new Error(`ユーザーの作成に失敗: ${createError.message}`);
+        throw new Error("ユーザー情報の作成に失敗しました");
       }
 
-      userData = newUser;
-    }
+      // 新しく作成したユーザーのIDを使用
+      const { error } = await supabase.from("test_results").insert({
+        user_id: newUser.id,
+        mbti_type: mbtiType,
+        answers: {}, // 必要に応じて回答データを保存
+        created_at: new Date().toISOString(), // 明示的に現在日時を設定
+      });
 
-    // テスト結果を取得
-    const { data, error } = await supabase
-      .from("test_results")
-      .select(
-        `
-        id,
-        mbti_type,
-        taken_at
-      `
-      )
-      .eq("user_id", userData!.id)
-      .order("taken_at", { ascending: false });
-
-    if (error) {
-      console.error("Test results fetch error:", error);
-      throw new Error(`テスト結果の取得に失敗: ${error.message}`);
-    }
-
-    return { success: true, data: data || [] };
-  } catch (error) {
-    console.error("Error in getTestResults:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "予期せぬエラーが発生しました",
-    };
-  }
-}
-
-export async function saveTestResult(mbtiType: MBTIType) {
-  const cookieStore = await cookies();
-  const savedKey = `saved_result_${mbtiType}`;
-
-  // 既に保存済みかチェック
-  if (cookieStore.get(savedKey)) {
-    return { success: true, message: "既に保存済みです" };
-  }
-
-  try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("ユーザーが見つかりません");
-    }
-
-    const supabase = createClient();
-
-    // まずユーザーのUUIDを取得
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("clerk_id", user.id)
-      .single();
-
-    if (userError || !userData) {
-      throw new Error("ユーザー情報の取得に失敗しました");
-    }
-
-    // 診断結果を保存
-    const { data, error } = await supabase
-      .from("test_results")
-      .insert({
+      if (error) {
+        console.error("Error saving test result:", error);
+        throw new Error(`テスト結果の保存に失敗しました: ${error.message}`);
+      }
+    } else {
+      // 既存ユーザーのIDを使用
+      const { error } = await supabase.from("test_results").insert({
         user_id: userData.id,
         mbti_type: mbtiType,
-      })
-      .select()
-      .single();
+        answers: {}, // 必要に応じて回答データを保存
+        created_at: new Date().toISOString(), // 明示的に現在日時を設定
+      });
 
-    if (error) {
-      throw error;
+      if (error) {
+        console.error("Error saving test result:", error);
+        throw new Error(`テスト結果の保存に失敗しました: ${error.message}`);
+      }
     }
 
-    // 保存済みとしてマーク
-    cookieStore.set(savedKey, "true", { maxAge: 3 }); // 3秒間有効
-
     revalidatePath("/profile");
-    return { success: true, data };
+    return { success: true };
   } catch (error) {
     console.error("Error saving test result:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "診断結果の保存に失敗しました",
-    };
+    return { error: (error as Error).message };
   }
 }

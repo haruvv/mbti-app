@@ -16,6 +16,10 @@ const nextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+    domains: ["localhost", "your-supabase-project.supabase.co"],
+  },
+  experimental: {
+    serverActions: true,
   },
 };
 

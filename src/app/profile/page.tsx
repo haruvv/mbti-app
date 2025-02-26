@@ -2,204 +2,260 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getTestResults } from "../_actions/test";
 import { typeDescriptions } from "../data/mbtiTypes";
-import { UserProfile } from "./UserProfile";
 import { getUserProfile } from "../_actions/profile";
-import { UsernameForm } from "./UsernameForm";
-import { formatDate } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import Image from "next/image";
+import { FollowStats } from "@/components/features/follows/FollowStats";
+import { FormattedDate } from "@/components/ui/FormattedDate";
+import { TypeCard } from "@/components/features/mbti/TypeCard";
+import { Settings, Twitter, Instagram, Globe } from "lucide-react";
 
 export default async function ProfilePage() {
-  const user = await currentUser();
-  if (!user) redirect("/");
+  try {
+    const user = await currentUser();
+    if (!user) redirect("/sign-in");
 
-  const { data: profile, error: profileError } = await getUserProfile(user.id);
-  const { data: results } = await getTestResults();
+    // プロフィール情報を取得
+    const { data: profileData, error: profileError } = await getUserProfile(
+      user.id
+    );
 
-  // 最新の診断結果を取得
-  const latestResult = results && results.length > 0 ? results[0] : null;
+    if (profileError || !profileData) {
+      throw new Error(profileError || "プロフィールの取得に失敗しました");
+    }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
-      <div className="container mx-auto max-w-4xl pt-8">
-        <div className="glass-effect rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 relative overflow-hidden">
-            {/* デコレーション要素 */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-24 -translate-x-24" />
+    const { success, data: testResults, error } = await getTestResults();
 
-            <div className="relative z-10">
-              <div className="flex items-start gap-8">
-                <UserProfile
-                  imageUrl={profile?.custom_image_url || user.imageUrl}
-                  name={profile?.display_name || user.firstName || "ゲスト"}
-                />
-                <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white mb-4">
-                    {profile?.display_name || user.firstName || "ゲスト"}
-                  </h1>
-                  <a
-                    href="/profile/edit"
-                    className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors border border-white/20"
-                  >
-                    プロフィール編集
-                  </a>
+    // 最新の診断結果を取得
+    const latestResult =
+      testResults && testResults.length > 0 ? testResults[0] : null;
+    const latestMbtiType = latestResult?.mbti_type;
+
+    // Supabaseからユーザー情報を取得
+    const supabase = createClient();
+
+    // フォロー数とフォロワー数を取得
+    let followingCount = 0;
+    let followersCount = 0;
+
+    const { data: followCounts } = await supabase.rpc("get_follow_counts", {
+      p_user_id: profileData.user_id,
+    });
+
+    followingCount = followCounts?.following_count || 0;
+    followersCount = followCounts?.followers_count || 0;
+
+    // プロフィール表示用データを取得
+    const displayName = profileData.display_name || "ゲスト";
+
+    // handleの取得（必要な場合はRPCから取得）
+    let handle = null;
+    const { data: userData } = await supabase
+      .from("user_profiles")
+      .select("handle")
+      .eq("user_id", profileData.user_id)
+      .single();
+
+    if (userData) {
+      handle = userData.handle;
+    }
+
+    const bio = profileData.bio || "";
+    const preferredMbti = profileData.preferred_mbti || latestMbtiType;
+    const profileImage = profileData.custom_image_url;
+    const bookmarkedTypes = profileData.bookmarked_types || [];
+    const socialLinks = profileData.social_links || {};
+
+    return (
+      <div className="container max-w-4xl py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* プロフィール情報（左側） */}
+          <div className="md:col-span-1 space-y-6">
+            <div className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-sm border">
+              {/* プロフィール画像 */}
+              <div className="relative w-32 h-32 mb-4">
+                {profileImage ? (
+                  <Image
+                    src={profileImage}
+                    alt={displayName}
+                    fill
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white text-4xl font-bold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              {/* ユーザー名とハンドル */}
+              <h1 className="text-2xl font-bold">{displayName}</h1>
+              {handle && (
+                <p className="text-gray-500 text-sm mb-2">@{handle}</p>
+              )}
+
+              {/* フォロー・フォロワー情報 */}
+              <FollowStats
+                followingCount={followingCount}
+                followersCount={followersCount}
+              />
+
+              {/* MBTI タイプ */}
+              {preferredMbti && (
+                <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                  {preferredMbti}
                 </div>
+              )}
+
+              {/* 自己紹介 */}
+              {bio && (
+                <div className="mt-4 text-gray-600 text-left w-full">
+                  <p className="whitespace-pre-wrap break-words">{bio}</p>
+                </div>
+              )}
+
+              {/* ソーシャルリンク */}
+              {Object.keys(socialLinks).length > 0 && (
+                <div className="flex gap-2 mt-4">
+                  {socialLinks.twitter && (
+                    <a
+                      href={`https://twitter.com/${socialLinks.twitter}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-blue-400"
+                    >
+                      <Twitter size={20} />
+                    </a>
+                  )}
+                  {socialLinks.instagram && (
+                    <a
+                      href={`https://instagram.com/${socialLinks.instagram}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-pink-500"
+                    >
+                      <Instagram size={20} />
+                    </a>
+                  )}
+                  {socialLinks.website && (
+                    <a
+                      href={socialLinks.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-green-500"
+                    >
+                      <Globe size={20} />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* 編集リンク */}
+              <div className="mt-6 w-full">
+                <Link
+                  href="/profile/edit"
+                  className="w-full flex items-center justify-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-md transition-colors"
+                >
+                  <Settings size={16} />
+                  プロフィールを編集
+                </Link>
               </div>
             </div>
           </div>
 
-          <div className="p-8">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                あなたのMBTI
-              </h2>
-              {latestResult ? (
-                <div className="glass-effect p-6 rounded-xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-3xl font-bold text-indigo-600 font-mono">
-                        {latestResult.mbti_type}
-                      </h3>
-                      <p className="text-xl text-gray-700">
-                        {typeDescriptions[latestResult.mbti_type].title}
-                      </p>
-                    </div>
-                    <a
-                      href={`/result?type=${latestResult.mbti_type}`}
-                      className="text-indigo-600 hover:text-indigo-700 font-medium"
-                    >
-                      詳細を見る →
-                    </a>
-                  </div>
-                  <p className="text-gray-600">
-                    {typeDescriptions[latestResult.mbti_type].description}
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="mb-4">まだMBTI診断を受けていません</p>
-                  <a
-                    href="/test"
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all"
-                  >
-                    診断を始める
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* 代表的なMBTIタイプの詳細 */}
+          {/* メインコンテンツ（右側） */}
+          <div className="md:col-span-2 space-y-6">
+            {/* 最新の診断結果 */}
             {latestResult && (
-              <div className="glass-effect p-6 rounded-xl">
-                <div className="space-y-4">
-                  {/* 既存の表示部分 */}
+              <div className="bg-white rounded-xl shadow-sm border p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">最新の診断結果</h2>
+                  <FormattedDate
+                    date={latestResult.created_at}
+                    className="text-sm text-gray-500"
+                  />
+                </div>
 
-                  {/* 特徴的な性格の追加 */}
-                  <div className="mt-4">
-                    <h4 className="text-lg font-medium text-gray-700 mb-2">
-                      特徴
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {typeDescriptions[latestResult.mbti_type].traits.map(
-                        (trait) => (
-                          <div
-                            key={trait}
-                            className="flex items-center gap-2 text-gray-600"
-                          >
-                            <span className="w-2 h-2 rounded-full bg-indigo-400" />
-                            {trait}
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
+                <div className="mb-4">
+                  <TypeCard
+                    type={latestResult.mbti_type}
+                    description={
+                      typeDescriptions[
+                        latestResult.mbti_type as keyof typeof typeDescriptions
+                      ]?.short || ""
+                    }
+                  />
+                </div>
 
-                  {/* アドバイスの追加 */}
-                  <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
-                    <h4 className="text-lg font-medium text-indigo-700 mb-2">
-                      アドバイス
-                    </h4>
-                    <p className="text-gray-600">
-                      {typeDescriptions[latestResult.mbti_type].advice}
-                    </p>
-                  </div>
+                <div className="flex justify-end">
+                  <Link
+                    href={`/result/${latestResult.id}`}
+                    className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                  >
+                    詳細を見る
+                  </Link>
                 </div>
               </div>
             )}
 
-            {/* 自己紹介 */}
-            {profile?.bio && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                  自己紹介
+            {/* お気に入りタイプ */}
+            {bookmarkedTypes && bookmarkedTypes.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border p-6">
+                <h2 className="text-xl font-bold mb-4">お気に入りタイプ</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {bookmarkedTypes.map((type) => (
+                    <TypeCard
+                      key={type}
+                      type={type}
+                      description={
+                        typeDescriptions[type as keyof typeof typeDescriptions]
+                          ?.short || ""
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 診断テストCTA */}
+            {!latestResult && (
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-md">
+                <h2 className="text-xl font-bold mb-2">
+                  あなたのMBTIタイプを発見しよう！
                 </h2>
-                <div className="glass-effect p-6 rounded-xl">
-                  <p className="text-gray-700 whitespace-pre-wrap">
-                    {profile.bio}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* お気に入りのタイプ */}
-            {profile?.bookmarked_types &&
-              profile.bookmarked_types.length > 0 && (
-                <div className="mt-8">
-                  <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                    お気に入りのタイプ
-                  </h2>
-                  <div className="glass-effect p-6 rounded-xl">
-                    <div className="flex flex-wrap gap-3">
-                      {profile.bookmarked_types.map((type) => (
-                        <div
-                          key={type}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50/50 border border-indigo-100"
-                        >
-                          <span className="font-mono font-bold text-indigo-600">
-                            {type}
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            {
-                              typeDescriptions[
-                                type as keyof typeof typeDescriptions
-                              ].title
-                            }
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            {results && results.length > 1 && (
-              <div className="mt-8">
-                <details className="group">
-                  <summary className="text-lg font-medium text-gray-700 cursor-pointer hover:text-indigo-600">
-                    過去の診断履歴を見る
-                  </summary>
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    {results.slice(1).map((result) => (
-                      <div
-                        key={result.id}
-                        className="glass-effect p-4 rounded-xl"
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="font-mono font-bold text-lg">
-                            {result.mbti_type}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {formatDate(result.taken_at)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
+                <p className="mb-4">
+                  簡単な質問に答えて、あなたの性格タイプを診断します。
+                </p>
+                <Link
+                  href="/test"
+                  className="inline-block bg-white text-indigo-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition-colors"
+                >
+                  診断を開始する
+                </Link>
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error("Profile page error:", error);
+    return (
+      <div className="container py-20 text-center">
+        <h1 className="text-3xl font-bold text-red-500 mb-4">エラー</h1>
+        <p className="mb-8">
+          {error instanceof Error
+            ? error.message
+            : "プロフィールの取得に失敗しました"}
+        </p>
+        <Link
+          href="/"
+          className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700"
+        >
+          ホームに戻る
+        </Link>
+      </div>
+    );
+  }
 }

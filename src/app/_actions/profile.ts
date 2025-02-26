@@ -8,108 +8,160 @@ export type UserProfile = {
   id: string;
   user_id: string;
   display_name: string | null;
-  custom_image_url: string | null;
-  preferred_mbti: string | null;
   bio: string | null;
-  bookmarked_types: string[] | null;
+  preferred_mbti: string | null;
+  custom_image_url: string | null;
+  bookmarked_types: string[];
   handle: string | null;
+  social_links: {
+    twitter?: string;
+    instagram?: string;
+    website?: string;
+  };
+  created_at: string;
+  updated_at: string;
+  handle_updated_at?: string;
 };
 
 export async function getUserProfile(clerkId: string) {
   try {
     const supabase = createClient();
 
-    let { data: user } = await supabase
+    // usersテーブルからユーザーIDのみを取得
+    const { data: user, error: userError } = await supabase
       .from("users")
-      .select("id, display_name")
+      .select("id")
       .eq("clerk_id", clerkId)
       .single();
 
-    if (!user) {
+    // ユーザーが存在しない場合のみ作成を試みる
+    if (userError && userError.code === "PGRST116") {
       const clerkUser = await currentUser();
-      if (!clerkUser) throw new Error("User not found in Clerk");
+      if (!clerkUser) {
+        return { error: "ユーザーが見つかりません" };
+      }
+
+      // 新規ユーザーの作成
+      const email = clerkUser.emailAddresses[0]?.emailAddress || "";
+      if (!email) {
+        return { error: "メールアドレスが見つかりません" };
+      }
 
       const { data: newUser, error: createError } = await supabase
         .from("users")
         .insert([
           {
             clerk_id: clerkId,
-            email:
-              clerkUser.emailAddresses[0]?.emailAddress || "dummy@example.com",
-            display_name: clerkUser.firstName || null,
+            email: email,
           },
         ])
         .select()
         .single();
 
       if (createError) {
-        throw createError;
+        console.error("Error creating user:", createError);
+        return { error: `ユーザー作成エラー: ${createError.message}` };
       }
 
-      user = newUser;
-    }
-
-    let { data: profile, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", user?.id)
-      .single();
-
-    if (!profile) {
-      if (!user) throw new Error("User not found");
-
-      const { data: newProfile, error: createProfileError } = await supabase
+      // 新規プロフィールの作成（handleはまだ設定しない）
+      const { data: newProfile, error: profileCreateError } = await supabase
         .from("user_profiles")
         .insert([
           {
-            user_id: user.id,
-            display_name: user.display_name,
+            user_id: newUser.id,
+            display_name: "ゲスト",
           },
         ])
         .select()
         .single();
 
-      if (createProfileError) {
-        throw createProfileError;
+      if (profileCreateError) {
+        console.error("Error creating profile:", profileCreateError);
+        return {
+          error: `プロフィール作成エラー: ${profileCreateError.message}`,
+        };
       }
 
-      profile = newProfile;
+      return { data: newProfile };
+    } else if (userError) {
+      console.error("User fetch error:", userError);
+      return { error: `ユーザー取得エラー: ${userError.message}` };
     }
 
-    return { success: true, data: profile as UserProfile };
+    // user_profilesテーブルからプロフィール情報を取得
+    const { data: profile, error: profileError } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profileError) {
+      // プロフィールが見つからない場合は作成
+      if (profileError.code === "PGRST116") {
+        const { data: newProfile, error: createProfileError } = await supabase
+          .from("user_profiles")
+          .insert([
+            {
+              user_id: user.id,
+              display_name: "ゲスト",
+            },
+          ])
+          .select()
+          .single();
+
+        if (createProfileError) {
+          console.error("Error creating profile:", createProfileError);
+          return {
+            error: `プロフィール作成エラー: ${createProfileError.message}`,
+          };
+        }
+
+        return { data: newProfile };
+      }
+
+      console.error("Profile fetch error:", profileError);
+      return { error: `プロフィール取得エラー: ${profileError.message}` };
+    }
+
+    return { data: profile };
   } catch (error) {
     console.error("Error in getUserProfile:", error);
-    return { success: false, error: "プロフィールの取得に失敗しました" };
+    return { error: "プロフィールの取得に失敗しました" };
   }
 }
 
 export async function updateUserProfile(
   clerkId: string,
   data: {
-    displayName: string;
-    imageUrl: string;
-    preferredMbti: string | null;
-    bio: string;
-    bookmarkedTypes: string[];
-    handle: string;
+    displayName?: string;
+    bio?: string;
+    preferredMbti?: string | null;
+    customImageUrl?: string;
+    bookmarkedTypes?: string[];
+    handle?: string;
+    socialLinks?: {
+      twitter?: string;
+      instagram?: string;
+      website?: string;
+    };
   }
 ) {
   const supabase = createClient();
 
-  // まずClerkIDに対応するSupabaseのuser_idを取得
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("id")
-    .eq("clerk_id", clerkId)
-    .single();
-
-  if (userError) {
-    console.error("User fetch error:", userError);
-    return { error: "ユーザー情報の取得に失敗しました" };
-  }
-
   try {
-    // 1. まずhandleを更新（update_user_handle関数を使用）
+    // まずClerkIDに対応するSupabaseのuser_idを取得
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", clerkId)
+      .single();
+
+    if (userError) {
+      console.error("User fetch error:", userError);
+      return { error: "ユーザー情報の取得に失敗しました" };
+    }
+
+    // ハンドル更新処理（指定された場合のみ）
     if (data.handle) {
       const { error: handleError } = await supabase.rpc("update_user_handle", {
         p_user_id: userData.id,
@@ -130,35 +182,141 @@ export async function updateUserProfile(
       }
     }
 
-    // 2. 次にuser_profilesテーブルを更新
-    const { data: profile, error: profileError } = await supabase
-      .from("user_profiles")
-      .update({
-        display_name: data.displayName,
-        custom_image_url: data.imageUrl,
-        preferred_mbti: data.preferredMbti,
-        bio: data.bio,
-        bookmarked_types: data.bookmarkedTypes,
-      })
-      .eq("user_id", userData.id)
-      .select()
-      .single();
+    // プロフィール更新処理（RPC関数を使用）
+    const { data: profile, error: profileError } = await supabase.rpc(
+      "update_user_profile",
+      {
+        p_user_id: userData.id,
+        p_display_name: data.displayName,
+        p_bio: data.bio,
+        p_preferred_mbti: data.preferredMbti,
+        p_custom_image_url: data.customImageUrl,
+        p_bookmarked_types: data.bookmarkedTypes,
+        p_social_links: data.socialLinks,
+      }
+    );
 
     if (profileError) {
       console.error("Profile update error:", profileError);
       return { error: "プロフィールの更新に失敗しました" };
     }
 
-    // キャッシュを更新
-    revalidatePath("/profile");
-    revalidatePath(`/profile/${data.handle}`);
-
-    return {
-      success: true,
-      data: profile,
-    };
+    return { data: profile };
   } catch (error) {
-    console.error("Update error:", error);
-    return { error: "プロフィールの更新に失敗しました" };
+    console.error("Unexpected error:", error);
+    return { error: "予期せぬエラーが発生しました" };
+  }
+}
+
+export async function updateProfile(formData: FormData) {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("ログインが必要です");
+    }
+
+    const supabase = createClient();
+
+    // FormDataから値を取得
+    const displayName = formData.get("displayName") as string;
+    const bio = formData.get("bio") as string;
+    const mbtiType = formData.get("mbtiType") as string;
+    const customImageUrl = formData.get("customImageUrl") as string;
+    const favoriteTypesStr = formData.get("favoriteTypes") as string;
+    const socialLinksStr = formData.get("socialLinks") as string;
+    const handle = formData.get("handle") as string;
+
+    // JSON文字列をパース
+    const favoriteTypes = JSON.parse(favoriteTypesStr || "[]");
+    const socialLinks = JSON.parse(socialLinksStr || "{}");
+
+    // Clerkのユーザーを取得
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("clerk_id", user.id)
+      .single();
+
+    if (userError) {
+      console.error("User fetch error:", userError);
+      return {
+        success: false,
+        error: "ユーザー情報の取得に失敗しました",
+      };
+    }
+
+    // 既存のプロフィールを確認
+    const { data: existingProfile, error: profileCheckError } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("user_id", userData.id)
+      .maybeSingle();
+
+    // handleが変更されている場合、既に使用されていないか確認
+    if (handle) {
+      const { data: existingHandle, error: handleError } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .eq("handle", handle)
+        .neq("user_id", userData.id)
+        .maybeSingle();
+
+      if (existingHandle) {
+        return {
+          success: false,
+          error: "このユーザーIDは既に使用されています",
+        };
+      }
+    }
+
+    // プロフィールの更新または作成
+    let updateOperation;
+    if (existingProfile) {
+      // 既存のプロフィールを更新
+      updateOperation = supabase
+        .from("user_profiles")
+        .update({
+          display_name: displayName,
+          bio,
+          preferred_mbti: mbtiType || null,
+          custom_image_url: customImageUrl,
+          bookmarked_types: favoriteTypes,
+          social_links: socialLinks,
+          handle: handle || null,
+        })
+        .eq("user_id", userData.id);
+    } else {
+      // 新規プロフィールを作成
+      updateOperation = supabase.from("user_profiles").insert({
+        user_id: userData.id,
+        display_name: displayName,
+        bio,
+        preferred_mbti: mbtiType || null,
+        custom_image_url: customImageUrl,
+        bookmarked_types: favoriteTypes,
+        social_links: socialLinks,
+        handle: handle || null,
+      });
+    }
+
+    const { error: updateError } = await updateOperation;
+
+    if (updateError) {
+      console.error("Profile update error:", updateError);
+      return {
+        success: false,
+        error: "プロフィールの更新に失敗しました",
+      };
+    }
+
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "不明なエラーが発生しました",
+    };
   }
 }

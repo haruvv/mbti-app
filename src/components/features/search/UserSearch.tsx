@@ -5,6 +5,9 @@ import { useDebounce } from "@/hooks/useDebounce";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { toggleFollow } from "@/app/_actions/follows";
+import { toast } from "sonner";
+import { useAuth } from "@clerk/nextjs";
 
 type SearchResult = {
   id: string;
@@ -21,8 +24,10 @@ export function UserSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState<string | null>(null);
   const debouncedQuery = useDebounce(query, 300);
   const router = useRouter();
+  const { isSignedIn } = useAuth();
 
   const searchUsers = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -55,6 +60,43 @@ export function UserSearch() {
     router.push(`/profile/${handle}`);
   };
 
+  // フォロー状態を切り替える関数
+  const handleToggleFollow = async (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!isSignedIn) {
+      toast.error("フォローするにはログインが必要です");
+      return;
+    }
+
+    setFollowLoading(userId);
+
+    try {
+      const { success, isFollowing, error } = await toggleFollow(userId);
+
+      if (success) {
+        // 結果リストを更新
+        setResults(
+          results.map((user) =>
+            user.id === userId ? { ...user, is_following: isFollowing } : user
+          )
+        );
+
+        toast.success(
+          isFollowing ? "フォローしました" : "フォロー解除しました"
+        );
+      } else {
+        toast.error(error || "操作に失敗しました");
+      }
+    } catch (error) {
+      console.error("Follow toggle error:", error);
+      toast.error("操作に失敗しました");
+    } finally {
+      setFollowLoading(null);
+    }
+  };
+
   // 表示名を取得するヘルパー関数
   function getDisplayName(user: SearchResult): string {
     return (
@@ -65,59 +107,74 @@ export function UserSearch() {
     );
   }
 
-  return (
-    <div className="relative">
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="ユーザーIDまたは表示名で検索..."
-        className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
+  // プロフィール画像のURLを取得するヘルパー関数
+  function getProfileImageUrl(user: SearchResult): string {
+    return user.user_profiles?.custom_image_url || "/default-avatar.png";
+  }
 
-      {/* 検索結果のドロップダウン */}
-      {query.trim() && (
-        <div className="absolute w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto z-50">
-          {isLoading ? (
-            <div className="p-4 text-center text-gray-500">検索中...</div>
-          ) : results.length > 0 ? (
-            <ul>
-              {results.map((user) => (
-                <li key={user.handle}>
+  return (
+    <div className="relative w-full">
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="ユーザーを検索..."
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {isLoading && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="animate-spin h-5 w-5 border-2 border-indigo-500 rounded-full border-t-transparent"></div>
+          </div>
+        )}
+      </div>
+
+      {results.length > 0 && (
+        <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg max-h-80 overflow-y-auto">
+          <ul className="py-1">
+            {results.map((user) => (
+              <li
+                key={user.id}
+                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+                onClick={() => handleUserSelect(user.handle)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative h-10 w-10 rounded-full overflow-hidden">
+                    <Image
+                      src={getProfileImageUrl(user)}
+                      alt={getDisplayName(user)}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium">{getDisplayName(user)}</p>
+                    <p className="text-sm text-gray-500">@{user.handle}</p>
+                  </div>
+                </div>
+
+                {isSignedIn && (
                   <button
-                    onClick={() => handleUserSelect(user.handle)}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-50"
+                    onClick={(e) => handleToggleFollow(user.id, e)}
+                    disabled={followLoading === user.id}
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      user.is_following
+                        ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        : "bg-indigo-600 text-white hover:bg-indigo-700"
+                    } transition-colors`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="relative size-8 rounded-full overflow-hidden bg-gray-100">
-                        <Image
-                          src={
-                            user.user_profiles?.custom_image_url ||
-                            "/default-avatar.png"
-                          }
-                          alt={getDisplayName(user)}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-base font-medium">
-                          {getDisplayName(user)}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          @{user.handle}
-                        </span>
-                      </div>
-                    </div>
+                    {followLoading === user.id ? (
+                      <span className="inline-block h-4 w-4 border-2 border-current rounded-full border-t-transparent animate-spin"></span>
+                    ) : user.is_following ? (
+                      "フォロー中"
+                    ) : (
+                      "フォロー"
+                    )}
                   </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="p-4 text-center text-gray-500">
-              ユーザーが見つかりませんでした
-            </div>
-          )}
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

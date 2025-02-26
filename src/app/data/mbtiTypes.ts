@@ -3,6 +3,10 @@ export type MBTITypeDescription = {
   description: string;
   traits: string[];
   advice: string;
+  strengths: string[];
+  weaknesses: string[];
+  careers: string[];
+  famousPeople: string[];
 };
 
 export type MBTITypeKey =
@@ -35,6 +39,26 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
     ],
     advice:
       "他者との協力や感情面での配慮を意識すると、より良い結果が得られるでしょう",
+    strengths: [
+      "長期的な計画を立てるのが得意",
+      "独創的な問題解決能力",
+      "知的好奇心が強い",
+      "自己改善への意欲が高い",
+    ],
+    weaknesses: [
+      "他者の感情に鈍感になりがち",
+      "完璧主義的な傾向",
+      "批判的になりすぎることがある",
+      "孤立しがちである",
+    ],
+    careers: [
+      "研究者",
+      "システムアナリスト",
+      "プロジェクトマネージャー",
+      "企業戦略コンサルタント",
+      "科学者",
+    ],
+    famousPeople: ["菅田将暉", "新垣結衣", "星野源", "永野芽郁"],
   },
   INTP: {
     title: "論理学者",
@@ -48,6 +72,20 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
     ],
     advice:
       "理論だけでなく実践に目を向け、行動に移すタイミングを見極めると良いでしょう",
+    strengths: [
+      "革新的なアイデアを生み出す",
+      "複雑な概念を理解する能力",
+      "論理的分析に優れている",
+      "柔軟な思考ができる",
+    ],
+    weaknesses: [
+      "優柔不断になりがち",
+      "現実世界への適応が難しいことも",
+      "締め切りや規則に苦手意識",
+      "感情表現が苦手",
+    ],
+    careers: ["プログラマー", "数学者", "エンジニア", "ゲーム開発者", "哲学者"],
+    famousPeople: ["橋本環奈", "中村倫也", "白敬亭", "上白石萌音"],
   },
   ENTJ: {
     title: "指揮官",
@@ -61,6 +99,10 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
     ],
     advice:
       "他者の意見に耳を傾け、柔軟性を持つことでさらに信頼を得られるでしょう",
+    strengths: ["意思決定力", "効率的な組織管理"],
+    weaknesses: ["支配的になりがち", "感情面への配慮不足"],
+    careers: ["経営者", "プロジェクトマネージャー", "政治家"],
+    famousPeople: ["松坂桃李", "福士蒼汰", "堺雅人", "市川猿之助"],
   },
   ENTP: {
     title: "討論者",
@@ -74,6 +116,10 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
     ],
     advice:
       "アイデアを実行に移す計画性を持つと、より大きな成果を上げられるでしょう",
+    strengths: ["創造的問題解決", "適応力"],
+    weaknesses: ["集中力散漫", "反抗的傾向"],
+    careers: ["起業家", "弁護士", "マーケティング"],
+    famousPeople: ["中島健人", "神木隆之介", "小栗旬", "西野亮廣"],
   },
   INFJ: {
     title: "提唱者",
@@ -87,11 +133,15 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
     ],
     advice:
       "自己犠牲に陥らず、自分のニーズにも目を向けるとバランスが取れるでしょう",
+    strengths: ["人間関係構築", "創造的思考"],
+    weaknesses: ["完璧主義", "燃え尽き症候群リスク"],
+    careers: ["カウンセラー", "作家", "教師"],
+    famousPeople: ["石原さとみ", "上戸彩", "綾瀬はるか", "戸田恵梨香"],
   },
   INFP: {
     title: "仲介者",
     description:
-      "情熱的な理想主義者。共感力が高く、内面的な価値観を大切にします。創造的な表現を通じて世界に貢献します。",
+      "理想主義的な夢想家。深い感性と創造性を持ち、自分の価値観に従って生きます。他者への共感力と独自の世界観が特徴です。",
     traits: [
       "感受性と共感力が強い",
       "独自の価値観を大切にする",
@@ -99,6 +149,10 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
       "内向的で穏やかな性格",
     ],
     advice: "現実的な目標設定を意識すると、理想を形にしやすくなるでしょう",
+    strengths: ["創造性", "深い理解力"],
+    weaknesses: ["批判に敏感", "非現実的になりがち"],
+    careers: ["作家", "カウンセラー", "アーティスト"],
+    famousPeople: ["有村架純", "広瀬すず", "吉岡里帆", "二階堂ふみ"],
   },
   ENFJ: {
     title: "主人公",
@@ -111,18 +165,27 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
       "調和と協力を重視する",
     ],
     advice: "自分自身の時間や感情を大切にし、過度な負担を避けると良いでしょう",
+    strengths: ["コミュニケーション能力", "共感力"],
+    weaknesses: ["批判に敏感", "自己犠牲的になりすぎる"],
+    careers: ["教師", "人事マネージャー", "リーダーシップコーチ"],
+    famousPeople: ["広瀬アリス", "吉高由里子", "松井玲奈", "波瑠"],
   },
   ENFP: {
     title: "冒険家",
-    description: "情熱的で創造的な自由思考家",
+    description:
+      "情熱的で創造的な自由思考家。人々とのつながりを大切にし、新しい可能性を探求します。",
     traits: [
       "好奇心旺盛で新しいアイデアを生み出す",
       "人々との交流を楽しむ",
       "柔軟で適応力がある",
-      "熱意と創造性に溢れている",
+      "情熱的でエネルギッシュ",
     ],
     advice:
       "プロジェクトの完遂や詳細への注意を心がけると、より成功につながるでしょう",
+    strengths: ["人とのつながり", "創造性"],
+    weaknesses: ["優柔不断", "組織化が苦手"],
+    careers: ["マーケター", "コンサルタント", "ジャーナリスト"],
+    famousPeople: ["平野紫耀", "新田真剣佑", "中村蒼", "平手友梨奈"],
   },
   ISTJ: {
     title: "堅実家",
@@ -135,6 +198,10 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
       "伝統やルールを尊重する",
     ],
     advice: "新しい方法にも目を向け、柔軟性を取り入れると視野が広がるでしょう",
+    strengths: ["詳細への注意", "責任感"],
+    weaknesses: ["変化への抵抗", "融通が利かないことも"],
+    careers: ["会計士", "軍人", "法執行官"],
+    famousPeople: ["大泉洋", "佐藤浩市", "市川海老蔵", "岸谷五朗"],
   },
   ISFJ: {
     title: "擁護者",
@@ -147,42 +214,58 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
       "穏やかで安定感がある",
     ],
     advice: "自分の感情や限界を主張することで、バランスを保てるでしょう",
+    strengths: ["サポート能力", "実用的スキル"],
+    weaknesses: ["変化への抵抗", "自己主張の弱さ"],
+    careers: ["看護師", "初等教育教師", "行政サービス"],
+    famousPeople: ["長澤まさみ", "上野樹里", "沢尻エリカ", "広末涼子"],
   },
   ESTJ: {
     title: "管理者",
     description:
-      "有能な組織運営者。伝統と秩序を重んじ、効率的なシステムを構築します。責任感が強く実務能力に優れます。",
+      "実務的なリーダー。秩序と安定を重んじ、チームを効率的に導きます。伝統的な価値観を持ち、目に見える結果を出すことを重視します。",
     traits: [
-      "実践的で効率を重視する",
-      "リーダーシップを発揮する",
-      "責任感が強く信頼される",
-      "秩序と規則を大切にする",
+      "組織力と実務的なスキルに優れている",
+      "責任感が強く行動的",
+      "直接的なコミュニケーションスタイル",
+      "計画通りに物事を進める",
     ],
-    advice: "他者の感情や異なる視点に配慮すると、より良い関係を築けるでしょう",
+    advice: "他者の感情や異なる視点に配慮するとより良い関係を築けます",
+    strengths: ["リーダーシップ", "直接的コミュニケーション"],
+    weaknesses: ["柔軟性の欠如", "過度に批判的になることも"],
+    careers: ["マネージャー", "軍や警察のリーダー", "判事"],
+    famousPeople: ["中井貴一", "松岡茉優", "阿部寛", "岡田准一"],
   },
   ESFJ: {
     title: "領事官",
     description:
-      "献身的な援助者。周囲との調和を大切にし、実践的な方法で人々を支えます。社会的責任を果たすことに喜びを感じます。",
+      "献身的な援助者。周囲との調和を大切にし、実践的な方法で人々を支えます。社交的で協力的な性格です。",
     traits: [
-      "社交的で温かい性格",
-      "他者を支えることに喜びを感じる",
-      "実践的で具体的な支援を行う",
-      "調和と協力を重視する",
+      "社交的で思いやりがある",
+      "協力的で人の世話を焼くのが好き",
+      "実用的で組織力がある",
+      "責任感が強く誠実",
     ],
-    advice: "自分のニーズも大切にし、過剰な責任感を避けると良いでしょう",
+    advice: "自分のニーズも大切にし、過剰な責任感を避けましょう",
+    strengths: ["対人関係", "実用的サポート"],
+    weaknesses: ["批判への敏感さ", "葛藤回避"],
+    careers: ["看護師長", "ホテル支配人", "教師"],
+    famousPeople: ["福山雅治", "山田裕貴", "水原希子", "清野菜名"],
   },
   ISTP: {
     title: "巨匠",
     description:
-      "実用的な問題解決者。機械システムの理解に優れ、即座に適切な対応ができます。自由と自立を何より尊びます。",
+      "実用的な問題解決者。機械システムの理解に優れ、即座に適切な対応ができます。冷静で論理的な分析力を持ちます。",
     traits: [
-      "実践的で手先が器用",
-      "冷静で分析的な判断力を持つ",
-      "自由と独立を求める",
-      "状況に即座に対応できる",
+      "実践的で論理的",
+      "臨機応変に対応できる",
+      "独立心が強い",
+      "技術的な問題解決に長けている",
     ],
     advice: "長期的な計画を立てることで、さらなる成果を上げられるでしょう",
+    strengths: ["技術的スキル", "危機対応能力"],
+    weaknesses: ["対人関係の構築が苦手なことも", "退屈への耐性が低い"],
+    careers: ["エンジニア", "パイロット", "技術者"],
+    famousPeople: ["横浜流星", "菊池風磨", "山崎賢人", "坂口健太郎"],
   },
   ISFP: {
     title: "冒険家",
@@ -195,6 +278,10 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
       "内向的で自由を愛する",
     ],
     advice: "目標や優先順位を明確にすると、行動がより効果的になるでしょう",
+    strengths: ["美的センス", "実践的創造性"],
+    weaknesses: ["長期計画の欠如", "衝突回避"],
+    careers: ["アーティスト", "デザイナー", "音楽家"],
+    famousPeople: ["浜辺美波", "小松菜奈", "中条あやみ", "桜井日奈子"],
   },
   ESTP: {
     title: "起業家",
@@ -207,6 +294,10 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
       "リスクを楽しむ傾向がある",
     ],
     advice: "長期的な影響を考慮し、衝動的な行動を抑えると良いでしょう",
+    strengths: ["危機対応", "実用的問題解決"],
+    weaknesses: ["退屈への耐性の低さ", "ルール無視傾向"],
+    careers: ["起業家", "営業", "スポーツ選手"],
+    famousPeople: ["二宮和也", "藤原竜也", "松村北斗", "森七菜"],
   },
   ESFP: {
     title: "エンターテイナー",
@@ -219,5 +310,9 @@ export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
       "柔軟で楽観的",
     ],
     advice: "将来の計画や責任に目を向けると、安定感が増すでしょう",
+    strengths: ["人間関係構築", "現実的解決能力"],
+    weaknesses: ["長期計画への苦手意識", "詳細への注意不足"],
+    careers: ["エンターテイナー", "イベントプランナー", "販売員"],
+    famousPeople: ["白石麻衣", "齋藤飛鳥", "指原莉乃", "生田絵梨花"],
   },
 } as const;
