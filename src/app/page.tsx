@@ -8,20 +8,33 @@ import { typeDescriptions } from "./data/mbtiTypes";
 import { TypeCard } from "@/components/features/mbti/TypeCard";
 import { DebugPanel } from "@/components/debug/DebugPanel";
 
-export default async function Home() {
+export default async function HomePage() {
+  // クライアントの作成
   const supabase = createClient();
 
-  // 最新の登録ユーザー数を取得
-  const { count: userCount } = await supabase
-    .from("users")
-    .select("*", { count: "exact", head: true });
+  // サーバーサイドでデータを取得
+  let userCount = 0;
+  let testCount = 0;
 
-  // 最新の診断テスト数を取得
-  const { count: testCount } = await supabase
-    .from("test_results")
-    .select("*", { count: "exact", head: true });
+  try {
+    // 最新の登録ユーザー数を取得
+    const userResult = await supabase
+      .from("users")
+      .select("*", { count: "exact", head: true });
 
-  // デバッグデータを準備（存在する変数のみを使用）
+    userCount = userResult.count || 0;
+
+    // 最新の診断テスト数を取得
+    const testResult = await supabase
+      .from("test_results")
+      .select("*", { count: "exact", head: true });
+
+    testCount = testResult.count || 0;
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+  }
+
+  // デバッグデータを準備
   const debugData = {
     stats: {
       userCount,
@@ -30,209 +43,193 @@ export default async function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* デバッグパネル */}
-      <DebugPanel data={debugData} />
-
-      {/* ヒーローセクション */}
-      <section className="py-20 bg-gradient-to-b from-white to-blue-50">
-        <div className="container px-4 mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                あなたのパーソナリティを
-                <br />
-                発見しよう
-              </h1>
-              <p className="text-lg text-gray-600 mb-8">
-                MBTIテストで自分自身をより深く理解し、他の人々とつながりましょう。
-                無料診断テストで始めるだけで、あなたの強みと成長の可能性が見えてきます。
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <SignedIn>
-                  <Link href="/test">
-                    <Button size="lg" className="rounded-full px-8">
-                      診断テストを受ける <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </SignedIn>
-                <SignedOut>
-                  <Link href="/sign-up">
-                    <Button size="lg" className="rounded-full px-8">
-                      今すぐ登録する <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/test/about">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="rounded-full px-8"
-                    >
-                      診断テストについて
-                    </Button>
-                  </Link>
-                </SignedOut>
-              </div>
-            </div>
-            <div className="md:w-1/2">
-              <div className="relative">
-                <div className="relative h-[400px] w-full">
-                  <Image
-                    src="/images/hero-image.png"
-                    alt="MBTIの16タイプ"
-                    fill
-                    className="object-cover rounded-lg shadow-lg"
-                    priority
-                  />
-                </div>
-                <div className="absolute -bottom-4 -right-4 bg-white p-4 rounded-lg shadow-lg">
-                  <div className="flex gap-4 items-center">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">
-                        {userCount || 0}+
-                      </p>
-                      <p className="text-sm text-gray-600">ユーザー</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">
-                        {testCount || 0}+
-                      </p>
-                      <p className="text-sm text-gray-600">診断数</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 特徴セクション */}
-      <section className="py-16 bg-white">
-        <div className="container px-4 mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            MBTIを知ると何が変わる？
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard
-              icon={<Brain className="h-8 w-8 text-blue-500" />}
-              title="自己理解の深化"
-              description="あなたの思考パターン、行動傾向、価値観を理解し、自分自身をより深く知ることができます。"
-            />
-            <FeatureCard
-              icon={<Users className="h-8 w-8 text-blue-500" />}
-              title="人間関係の向上"
-              description="他者との相性や効果的なコミュニケーション方法を知り、より健全な人間関係を構築できます。"
-            />
-            <FeatureCard
-              icon={<Activity className="h-8 w-8 text-blue-500" />}
-              title="キャリア選択の助け"
-              description="あなたの強みを活かせる職業や環境を見つけ、より充実したキャリアを築くヒントが得られます。"
-            />
-            <FeatureCard
-              icon={<LineChart className="h-8 w-8 text-blue-500" />}
-              title="個人的成長"
-              description="自分の弱点や成長の可能性を理解し、意識的に成長するためのアクションプランを立てられます。"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* コミュニティセクション */}
-      <section className="py-16 bg-blue-50">
-        <div className="container px-4 mx-auto max-w-6xl text-center">
-          <h2 className="text-3xl font-bold mb-6">
-            MBTIコミュニティに参加しよう
-          </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
-            同じタイプの人々と交流し、経験を共有したり、異なるタイプの人々から新しい視点を学んだりすることができます。
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="container mx-auto px-4 py-16 max-w-4xl">
+        {/* ヒーローセクション */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+            あなたの性格タイプを発見しよう
+          </h1>
+          <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+            MBTIで自己理解を深め、あなたに合った人間関係やキャリアを見つけましょう
           </p>
-          <Link href="/community">
-            <Button className="rounded-full px-8">
-              コミュニティを探索する
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* タイプ説明セクション */}
-      <section className="py-16 bg-white">
-        <div className="container px-4 mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            16のパーソナリティタイプ
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <MbtiTypeCard code="INTJ" name="建築家" />
-            <MbtiTypeCard code="INTP" name="論理学者" />
-            <MbtiTypeCard code="ENTJ" name="指揮官" />
-            <MbtiTypeCard code="ENTP" name="討論者" />
-            <MbtiTypeCard code="INFJ" name="提唱者" />
-            <MbtiTypeCard code="INFP" name="仲介者" />
-            <MbtiTypeCard code="ENFJ" name="主人公" />
-            <MbtiTypeCard code="ENFP" name="運動家" />
-            <MbtiTypeCard code="ISTJ" name="管理者" />
-            <MbtiTypeCard code="ISFJ" name="擁護者" />
-            <MbtiTypeCard code="ESTJ" name="幹部" />
-            <MbtiTypeCard code="ESFJ" name="領事館" />
-            <MbtiTypeCard code="ISTP" name="巨匠" />
-            <MbtiTypeCard code="ISFP" name="冒険家" />
-            <MbtiTypeCard code="ESTP" name="起業家" />
-            <MbtiTypeCard code="ESFP" name="エンターテイナー" />
-          </div>
-          <div className="text-center mt-8">
-            <Link href="/types">
-              <Button variant="outline" className="rounded-full px-8">
-                すべてのタイプを詳しく見る
-              </Button>
-            </Link>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="/test"
+              className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors"
+            >
+              診断を始める
+            </a>
+            <a
+              href="/types"
+              className="px-6 py-3 bg-white text-indigo-600 border border-indigo-200 rounded-lg shadow-sm hover:bg-indigo-50 transition-colors"
+            >
+              タイプを見る
+            </a>
           </div>
         </div>
-      </section>
 
-      {/* CTAセクション */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="container px-4 mx-auto max-w-6xl text-center">
-          <h2 className="text-3xl font-bold mb-6">
-            あなたのMBTIタイプを見つけましょう
-          </h2>
-          <p className="text-lg mb-8 max-w-3xl mx-auto opacity-90">
-            10分程度の診断テストで、あなたの思考パターンや感情の処理方法、世界との関わり方を知ることができます。
-          </p>
-          <SignedIn>
-            <Link href="/test">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8"
+        {/* 特徴セクション */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {/* 特徴1 */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                診断テストを受ける <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </SignedIn>
-          <SignedOut>
-            <Link href="/sign-up">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8"
-              >
-                今すぐ始める <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </SignedOut>
-        </div>
-      </section>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">正確な診断</h3>
+            <p className="text-gray-600">
+              科学的根拠に基づいた質問で、あなたの性格タイプを正確に分析します
+            </p>
+          </div>
 
-      {/* フッター */}
-      <footer className="py-8 bg-gray-50 border-t">
-        <div className="container px-4 mx-auto max-w-6xl">
-          <div className="text-center text-gray-500 text-sm">
-            <p>
-              © {new Date().getFullYear()} MBTI Community. All rights reserved.
+          {/* 特徴2 */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">コミュニティ</h3>
+            <p className="text-gray-600">
+              同じタイプのユーザーと交流し、経験や考えを共有できます
+            </p>
+          </div>
+
+          {/* 特徴3 */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">洞察に満ちた分析</h3>
+            <p className="text-gray-600">
+              あなたの強みや弱み、理想的な環境を詳しく解説します
             </p>
           </div>
         </div>
-      </footer>
+
+        {/* MBTIの説明 */}
+        <div className="mb-16 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-4">MBTIとは？</h2>
+              <p className="text-gray-700 mb-4">
+                MBTIは「マイヤーズ・ブリッグスタイプ指標」の略で、カール・ユングの心理学理論に基づいて作られた性格診断ツールです。
+                4つの指標から、あなたの思考・行動パターンを16タイプに分類します。
+              </p>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center">
+                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                    E/I
+                  </span>
+                  <span>外向型(Extraversion)／内向型(Introversion)</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                    S/N
+                  </span>
+                  <span>感覚型(Sensing)／直感型(iNtuition)</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
+                    T/F
+                  </span>
+                  <span>思考型(Thinking)／感情型(Feeling)</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
+                    J/P
+                  </span>
+                  <span>判断型(Judging)／知覚型(Perceiving)</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">診断の流れ</h3>
+              <ol className="space-y-2 list-decimal list-inside">
+                <li>簡単な質問に回答（約5分）</li>
+                <li>あなたの性格タイプを分析</li>
+                <li>詳細な解説と自己理解のヒント</li>
+                <li>相性の良いタイプとの比較</li>
+              </ol>
+              <div className="mt-4">
+                <a
+                  href="/test"
+                  className="inline-flex items-center text-indigo-600 hover:text-indigo-800"
+                >
+                  今すぐ診断する
+                  <svg
+                    className="w-4 h-4 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTAセクション */}
+        <div className="text-center py-8 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-md">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            自分自身を理解する旅に出よう
+          </h2>
+          <p className="text-white opacity-90 mb-6 max-w-xl mx-auto">
+            5分の診断で、あなたの性格タイプを発見し、より良い人間関係や自己成長につなげましょう
+          </p>
+          <a
+            href="/test"
+            className="inline-block px-6 py-3 bg-white text-indigo-700 rounded-lg shadow hover:bg-gray-100 transition-colors"
+          >
+            無料診断を始める
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

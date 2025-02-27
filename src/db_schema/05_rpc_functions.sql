@@ -559,4 +559,16 @@ BEGIN
         'total_count', v_count
     );
 END;
+$$;
+
+-- MBTIタイプごとのテスト数を取得するRPC関数
+CREATE OR REPLACE FUNCTION get_mbti_test_counts()
+RETURNS TABLE (mbti_type TEXT, count BIGINT)
+LANGUAGE SQL
+SECURITY DEFINER
+AS $$
+    SELECT mbti_type, COUNT(*) as count
+    FROM test_results
+    GROUP BY mbti_type
+    ORDER BY count DESC;
 $$; 

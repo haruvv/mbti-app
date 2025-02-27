@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import UserSearch from "@/components/features/search/UserSearch";
+import { BarChart3 } from "lucide-react";
 
 // プロフィールタイプの定義
 type Profile = {
@@ -54,6 +55,15 @@ export default function Header() {
     }
     return "U";
   };
+
+  // ナビゲーションリンクの配列に追加
+  const navLinks = [
+    {
+      href: "/ranking",
+      label: "ランキング",
+      icon: <BarChart3 className="h-5 w-5" />,
+    },
+  ];
 
   return (
     <header className="bg-white border-b sticky top-0 z-10 shadow-sm">
@@ -91,6 +101,18 @@ export default function Header() {
                     )}
                   >
                     タイプ一覧
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/ranking" legacyBehavior passHref>
+                  <NavigationMenuLink
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      "hover:bg-indigo-50 transition-colors"
+                    )}
+                  >
+                    ランキング
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
