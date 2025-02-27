@@ -39,7 +39,7 @@ export async function toggleFollow(targetUserId: string): Promise<{
     }
 
     // フォロー/フォロー解除の処理
-    const { data, error } = await supabase.rpc("toggle_follow", {
+    const { data, error } = await supabase.rpc("toggle_follow_status", {
       p_follower_id: userData.id,
       p_following_id: targetUserId,
     });
@@ -47,12 +47,13 @@ export async function toggleFollow(targetUserId: string): Promise<{
     if (error) {
       console.error("Toggle follow error:", error);
 
-      // エラーメッセージを日本語に変換
-      const errorMessage = error.message.includes("Cannot follow yourself")
-        ? "自分自身をフォローすることはできません"
-        : "フォロー操作に失敗しました";
+      // デバッグ用の詳細なログ出力
+      console.log("Function params:", {
+        p_follower_id: userData.id,
+        p_following_id: targetUserId,
+      });
 
-      return { success: false, error: errorMessage };
+      return { success: false, error: "フォロー状態の更新に失敗しました" };
     }
 
     // 関連するパスを再検証
@@ -101,7 +102,7 @@ export async function checkIsFollowing(targetUserId: string): Promise<{
 
     // フォロー状態を確認
     const { data: isFollowing, error: followError } = await supabase.rpc(
-      "check_is_following",
+      "check_follow_status",
       {
         p_follower_id: userData.id,
         p_following_id: targetUserId,

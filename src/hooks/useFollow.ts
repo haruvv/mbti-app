@@ -11,7 +11,7 @@ export function useFollow() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.rpc("toggle_follow", {
+      const { data, error } = await supabase.rpc("toggle_follow_status", {
         p_follower_id: followerId,
         p_following_id: followingId,
       });

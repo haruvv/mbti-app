@@ -37,11 +37,13 @@ export default async function UserProfilePage({
   const { tab } = (await searchParams) || {};
   const activeTab = tab || "profile";
   const supabase = createClient();
-  const { userId } = auth();
+
+  // Clerkから取得したログインユーザーID - 非同期処理を待つ
+  const { userId: clerkUserId } = await auth();
 
   // デバッグログ
   if (DEBUG_MODE)
-    console.log("Debug: リクエストパラメータ", { handle, tab, userId });
+    console.log("Debug: リクエストパラメータ", { handle, tab, clerkUserId });
 
   try {
     // ユーザー情報の取得（詳細データを含む）
@@ -119,28 +121,29 @@ export default async function UserProfilePage({
     }
 
     // 現在のユーザーIDを取得
-    let currentUserId = null;
-    let isFollowing = false;
-    let isCurrentUser = false;
+    let loggedInUserId = null; // ログイン中のユーザーのSupabaseID
+    let isFollowing = false; // ログイン中のユーザーがこのプロフィールのユーザーをフォローしているか
+    let isOwnProfile = false; // 表示中のプロフィールが自分自身のものか
 
-    if (userId) {
-      const { data: currentUser } = await supabase
+    if (clerkUserId) {
+      const { data: loggedInUser } = await supabase
         .from("users")
         .select("id")
-        .eq("clerk_id", userId)
+        .eq("clerk_id", clerkUserId)
         .single();
 
-      if (currentUser) {
-        currentUserId = currentUser.id;
-        isCurrentUser =
-          currentUser.id === userData.id || currentUser.id === userData.user_id;
+      if (loggedInUser) {
+        loggedInUserId = loggedInUser.id;
+        isOwnProfile =
+          loggedInUser.id === userData.id ||
+          loggedInUser.id === userData.user_id;
 
-        // 自分自身でない場合のみフォロー状態を確認
-        if (!isCurrentUser) {
+        // 自分自身のプロフィールでない場合のみフォロー状態を確認
+        if (!isOwnProfile) {
           const { data: followData } = await supabase
             .from("follows")
             .select("*")
-            .eq("follower_id", currentUser.id)
+            .eq("follower_id", loggedInUser.id)
             .eq("following_id", userData.user_id || userData.id)
             .maybeSingle();
 
@@ -205,7 +208,7 @@ export default async function UserProfilePage({
           followingCount,
           followersCount,
           isFollowing,
-          isCurrentUser,
+          isOwnProfile,
         },
       },
       { title: "テスト結果", data: latestTestResult },
@@ -256,7 +259,8 @@ export default async function UserProfilePage({
                       </p>
                     </div>
 
-                    {currentUserId && !isCurrentUser && (
+                    {/* フォローボタン表示 */}
+                    {loggedInUserId && !isOwnProfile && (
                       <FollowButton
                         targetUserId={userData.user_id || userData.id}
                         initialIsFollowing={isFollowing}

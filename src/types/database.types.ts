@@ -148,7 +148,7 @@ export interface Database {
         };
         Returns: Json;
       };
-      toggle_follow: {
+      toggle_follow_status: {
         Args: {
           p_follower_id: string;
           p_following_id: string;

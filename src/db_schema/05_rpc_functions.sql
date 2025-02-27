@@ -118,7 +118,7 @@ END;
 $$;
 
 -- フォロー/フォロー解除を切り替える関数
-CREATE OR REPLACE FUNCTION toggle_follow(
+CREATE OR REPLACE FUNCTION toggle_follow_status(
     p_follower_id UUID,
     p_following_id UUID
 )
@@ -149,7 +149,8 @@ BEGIN
         v_result := json_build_object(
             'status', 'unfollowed',
             'follower_id', p_follower_id,
-            'following_id', p_following_id
+            'following_id', p_following_id,
+            'is_following', false
         );
     ELSE
         -- フォロー
@@ -159,7 +160,8 @@ BEGIN
         v_result := json_build_object(
             'status', 'followed',
             'follower_id', p_follower_id,
-            'following_id', p_following_id
+            'following_id', p_following_id,
+            'is_following', true
         );
     END IF;
 
