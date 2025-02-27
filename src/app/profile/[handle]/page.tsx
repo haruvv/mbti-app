@@ -62,7 +62,7 @@ export default async function UserProfilePage({
         updated_at
       `
       )
-      // .eq("handle", handle)
+      .eq("handle", handle)
       .single();
 
     // デバッグログ

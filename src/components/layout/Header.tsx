@@ -21,7 +21,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
-import UserSearch from "@/components/UserSearch";
+import UserSearch from "@/components/features/search/UserSearch";
 
 // プロフィールタイプの定義
 type Profile = {
@@ -56,25 +56,40 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b sticky top-0 z-10">
+    <header className="bg-white border-b sticky top-0 z-10 shadow-sm">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold">MBTI App</span>
+          <Link
+            href="/"
+            className="flex items-center space-x-2 transition-transform hover:scale-105"
+          >
+            <div className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">
+              MBTI App
+            </div>
           </Link>
 
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
                 <Link href="/test" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <NavigationMenuLink
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      "hover:bg-indigo-50 transition-colors"
+                    )}
+                  >
                     診断テスト
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link href="/types" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <NavigationMenuLink
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      "hover:bg-indigo-50 transition-colors"
+                    )}
+                  >
                     タイプ一覧
                   </NavigationMenuLink>
                 </Link>
@@ -89,14 +104,23 @@ export default function Header() {
         </div>
 
         <SignedOut>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <SignInButton>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                className="transition-all hover:shadow-md"
+              >
                 ログイン
               </Button>
             </SignInButton>
             <SignUpButton>
-              <Button size="sm">登録</Button>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 shadow-sm hover:shadow transition-all"
+              >
+                登録
+              </Button>
             </SignUpButton>
           </div>
         </SignedOut>
@@ -105,10 +129,10 @@ export default function Header() {
           <div className="flex items-center">
             <Link
               href="/profile"
-              className="flex items-center gap-2 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-50"
+              className="flex items-center gap-2 hover:text-blue-600 transition-all p-2 rounded-md hover:bg-indigo-50 hover:shadow-sm"
             >
               {profile?.custom_image_url ? (
-                <div className="w-9 h-9 relative">
+                <div className="w-9 h-9 relative ring-2 ring-indigo-100 rounded-full">
                   <Image
                     src={profile.custom_image_url}
                     alt={profile?.display_name || "プロフィール"}
@@ -117,7 +141,7 @@ export default function Header() {
                   />
                 </div>
               ) : (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
                   {getInitial()}
                 </div>
               )}

@@ -136,15 +136,22 @@ export default async function ProfilePage() {
 
             <div className="px-6 pb-6">
               {/* アバター画像 */}
-              <div className="relative -mt-16 mb-4">
-                <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white">
-                  <Image
-                    src={profileData.custom_image_url || "/default-avatar.png"}
-                    alt={displayName}
-                    width={128}
-                    height={128}
-                    className="object-cover w-full h-full"
-                  />
+              <div className="flex flex-col items-left -mt-16">
+                <div className="relative w-32 h-32">
+                  {profileData.custom_image_url ? (
+                    <div className="w-32 h-32 relative ring-4 ring-indigo-100 rounded-full shadow-md overflow-hidden">
+                      <Image
+                        src={profileData.custom_image_url}
+                        alt={displayName}
+                        fill
+                        className="rounded-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center text-white text-4xl font-bold shadow-md">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
               </div>
 

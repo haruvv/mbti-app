@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
-import Header from "@/components/Header";
+import Header from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -28,9 +29,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
-        <body>
+        <body className="flex flex-col min-h-screen">
           <Header />
-          <main>{children}</main>
+          <main className="flex-grow">{children}</main>
+          <Footer />
           <Toaster />
         </body>
       </html>

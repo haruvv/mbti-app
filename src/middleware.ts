@@ -12,7 +12,6 @@ const isPublicRoute = createRouteMatcher([
   "/test(.*)",
   "/result(.*)",
   "/api/webhook/clerk",
-  "/explore(.*)",
   "/type(.*)",
   "/types(.*)",
 ]);

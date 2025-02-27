@@ -1,180 +1,194 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useState, useEffect, useRef } from "react";
+import { Search, X, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { toggleFollow } from "@/app/_actions/follows";
-import { toast } from "sonner";
-import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/useDebounce";
+import { createClient } from "@supabase/supabase-js";
 
-type SearchResult = {
-  id: string;
-  handle: string;
-  display_name: string | null;
-  user_profiles: {
-    display_name: string | null;
-    custom_image_url: string | null;
-  };
-  is_following?: boolean;
+// ユーザーのイニシャルを取得する関数を追加
+const getInitial = (name: string): string => {
+  return name ? name.charAt(0).toUpperCase() : "U";
 };
 
-export function UserSearch() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+// 検索結果の型定義を修正して id フィールドも許容する
+type UserSearchResult = {
+  id?: string; // RPC関数からの結果用
+  user_id?: string; // フォールバック結果用
+  display_name: string;
+  custom_image_url?: string;
+  handle?: string;
+};
+
+export default function UserSearch() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState<UserSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [followLoading, setFollowLoading] = useState<string | null>(null);
-  const debouncedQuery = useDebounce(query, 300);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { isSignedIn } = useAuth();
 
-  const searchUsers = async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setResults([]);
-      return;
-    }
+  // 検索クエリのデバウンス処理
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `/api/users/search?q=${encodeURIComponent(searchQuery)}`
-      );
-      const data = await response.json();
-      setResults(data.users || []);
-    } catch (error) {
-      console.error("Search error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  // 検索結果の外側をクリックしたら閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        resultsRef.current &&
+        !resultsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // 検索クエリが変更されたら検索を実行
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!debouncedSearchQuery.trim()) {
+        setResults([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        // APIエンドポイントを使用した検索
+        const response = await fetch(
+          `/api/users/search?q=${encodeURIComponent(debouncedSearchQuery)}`
+        );
+        const data = await response.json();
+        setResults(data.users || []);
+      } catch (error) {
+        console.error("検索エラー:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    searchUsers();
+  }, [debouncedSearchQuery]);
+
+  // 検索ボックスにフォーカスしたとき
+  const handleFocus = () => {
+    setIsOpen(true);
   };
 
-  useEffect(() => {
-    searchUsers(debouncedQuery);
-  }, [debouncedQuery]);
+  // 検索クエリを変更したとき
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setIsOpen(true);
+  };
 
-  // プロフィールページへの遷移とリセット処理を行う関数
+  // 検索ボックスをクリアする
+  const handleClear = () => {
+    setSearchQuery("");
+    setResults([]);
+    inputRef.current?.focus();
+  };
+
+  // ユーザープロフィールに移動したとき
   const handleUserSelect = (handle: string) => {
-    setQuery(""); // 検索欄をクリア
-    setResults([]); // 検索結果をクリア
+    if (!handle) return;
+
+    setIsOpen(false);
+    setSearchQuery("");
+    setResults([]);
+
+    // リンクを使ってクライアント側で遷移させる（エラーを避けるため）
     router.push(`/profile/${handle}`);
   };
 
-  // フォロー状態を切り替える関数
-  const handleToggleFollow = async (userId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (!isSignedIn) {
-      toast.error("フォローするにはログインが必要です");
-      return;
-    }
-
-    setFollowLoading(userId);
-
-    try {
-      const { success, isFollowing, error } = await toggleFollow(userId);
-
-      if (success) {
-        // 結果リストを更新
-        setResults(
-          results.map((user) =>
-            user.id === userId ? { ...user, is_following: isFollowing } : user
-          )
-        );
-
-        toast.success(
-          isFollowing ? "フォローしました" : "フォロー解除しました"
-        );
-      } else {
-        toast.error(error || "操作に失敗しました");
-      }
-    } catch (error) {
-      console.error("Follow toggle error:", error);
-      toast.error("操作に失敗しました");
-    } finally {
-      setFollowLoading(null);
-    }
-  };
-
-  // 表示名を取得するヘルパー関数
-  function getDisplayName(user: SearchResult): string {
-    return (
-      user.user_profiles?.display_name ||
-      user.display_name ||
-      `@${user.handle}` ||
-      "Unknown User"
-    );
-  }
-
-  // プロフィール画像のURLを取得するヘルパー関数
-  function getProfileImageUrl(user: SearchResult): string {
-    return user.user_profiles?.custom_image_url || "/default-avatar.png";
-  }
-
   return (
-    <div className="relative w-full">
+    <div className="relative">
+      {/* 検索ボックス */}
       <div className="relative">
+        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <Search className="w-4 h-4 text-gray-400" />
+        </div>
         <input
+          ref={inputRef}
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
           placeholder="ユーザーを検索..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full p-2 pl-10 pr-10 text-sm border rounded-full bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          value={searchQuery}
+          onChange={handleChange}
+          onFocus={handleFocus}
         />
-        {isLoading && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin h-5 w-5 border-2 border-indigo-500 rounded-full border-t-transparent"></div>
-          </div>
+        {searchQuery && (
+          <button
+            className="absolute inset-y-0 right-0 flex items-center pr-3"
+            onClick={handleClear}
+          >
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
         )}
       </div>
 
-      {results.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg max-h-80 overflow-y-auto">
-          <ul className="py-1">
-            {results.map((user) => (
-              <li
-                key={user.id}
-                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
-                onClick={() => handleUserSelect(user.handle)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative h-10 w-10 rounded-full overflow-hidden">
-                    <Image
-                      src={getProfileImageUrl(user)}
-                      alt={getDisplayName(user)}
-                      fill
-                      className="object-cover"
-                    />
+      {/* 検索結果 */}
+      {isOpen && (
+        <div
+          ref={resultsRef}
+          className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 overflow-hidden max-h-96 overflow-y-auto"
+        >
+          {isLoading ? (
+            <div className="flex justify-center p-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            </div>
+          ) : results.length > 0 ? (
+            <ul>
+              {results.map((user) => (
+                <li
+                  // id と user_id の両方をサポートする一意のキー設定
+                  key={user.id || user.user_id || `user-${Math.random()}`}
+                  className="border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => user.handle && handleUserSelect(user.handle)}
+                >
+                  <div className="flex items-center p-3">
+                    <div className="flex-shrink-0 w-10 h-10 relative">
+                      {user.custom_image_url ? (
+                        <Image
+                          src={user.custom_image_url}
+                          alt={user.display_name}
+                          width={40}
+                          height={40}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold">
+                          {getInitial(user.display_name)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium">{user.display_name}</p>
+                      {user.handle && (
+                        <p className="text-xs text-gray-500">@{user.handle}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{getDisplayName(user)}</p>
-                    <p className="text-sm text-gray-500">@{user.handle}</p>
-                  </div>
-                </div>
-
-                {isSignedIn && (
-                  <button
-                    onClick={(e) => handleToggleFollow(user.id, e)}
-                    disabled={followLoading === user.id}
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      user.is_following
-                        ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                        : "bg-indigo-600 text-white hover:bg-indigo-700"
-                    } transition-colors`}
-                  >
-                    {followLoading === user.id ? (
-                      <span className="inline-block h-4 w-4 border-2 border-current rounded-full border-t-transparent animate-spin"></span>
-                    ) : user.is_following ? (
-                      "フォロー中"
-                    ) : (
-                      "フォロー"
-                    )}
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          ) : searchQuery ? (
+            <div className="p-4 text-center text-gray-500">
+              ユーザーが見つかりませんでした
+            </div>
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              ユーザー名またはIDを入力してください
+            </div>
+          )}
         </div>
       )}
     </div>
