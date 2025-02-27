@@ -603,13 +603,13 @@ export default function ProfileEditPage() {
               </div>
 
               {/* ソーシャルリンク */}
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">
                   ソーシャルリンク
-                </h3>
+                </h3> */}
 
-                {/* Twitter */}
-                <div className="mb-3">
+              {/* Twitter */}
+              {/* <div className="mb-3">
                   <label
                     htmlFor="twitter"
                     className="block text-sm text-gray-600 mb-1"
@@ -634,10 +634,10 @@ export default function ProfileEditPage() {
                       {socialLinkErrors.twitter}
                     </p>
                   )}
-                </div>
+                </div> */}
 
-                {/* Instagram */}
-                <div className="mb-3">
+              {/* Instagram */}
+              {/* <div className="mb-3">
                   <label
                     htmlFor="instagram"
                     className="block text-sm text-gray-600 mb-1"
@@ -662,10 +662,10 @@ export default function ProfileEditPage() {
                       {socialLinkErrors.instagram}
                     </p>
                   )}
-                </div>
+                </div> */}
 
-                {/* Webサイト */}
-                <div>
+              {/* Webサイト */}
+              {/* <div>
                   <label
                     htmlFor="website"
                     className="block text-sm text-gray-600 mb-1"
@@ -682,7 +682,7 @@ export default function ProfileEditPage() {
                     placeholder="https://yourwebsite.com"
                   />
                 </div>
-              </div>
+              </div> */}
 
               {/* エラーメッセージ */}
               {error && (

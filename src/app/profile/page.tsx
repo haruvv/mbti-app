@@ -51,7 +51,10 @@ export default async function ProfilePage() {
     // 最新の診断結果を取得
     const latestResult =
       testResults && testResults.length > 0 ? testResults[0] : null;
-    const latestMbtiType = latestResult?.mbti_type;
+
+    // preferred_mbtiを優先的に使用し、なければ最新の診断結果を表示
+    const mbtiType =
+      profileData.preferred_mbti || latestResult?.mbti_type || null;
 
     // Supabaseからユーザー情報を取得
     const supabase = createClient();
@@ -162,9 +165,9 @@ export default async function ProfilePage() {
                     <div>
                       <h1 className="text-2xl font-bold flex items-center">
                         {displayName}
-                        {latestMbtiType && (
+                        {mbtiType && (
                           <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                            {latestMbtiType}
+                            {mbtiType}
                           </span>
                         )}
                       </h1>
@@ -214,11 +217,11 @@ export default async function ProfilePage() {
                             </span>
                           </div>
 
-                          {latestMbtiType && (
+                          {mbtiType && (
                             <div className="flex items-center">
                               <Star size={16} className="mr-1.5" />
                               <span className="text-sm">
-                                最新診断: {latestMbtiType}
+                                最新診断: {mbtiType}
                               </span>
                             </div>
                           )}
@@ -227,7 +230,7 @@ export default async function ProfilePage() {
                     </div>
 
                     {/* ソーシャルリンク */}
-                    {(socialLinks.twitter ||
+                    {/* {(socialLinks.twitter ||
                       socialLinks.instagram ||
                       socialLinks.website) && (
                       <div className="flex gap-3 mt-3">
@@ -262,7 +265,7 @@ export default async function ProfilePage() {
                           </a>
                         )}
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   {/* フォロー数 */}
@@ -287,21 +290,21 @@ export default async function ProfilePage() {
 
             <TabsContent value="profile" className="space-y-6">
               {/* MBTIタイプ情報 */}
-              {latestMbtiType && typeDescriptions[latestMbtiType] && (
+              {mbtiType && typeDescriptions[mbtiType] && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center">
                       <BadgeCheck className="mr-2 h-5 w-5 text-indigo-500" />
-                      {latestMbtiType}タイプ情報
+                      {mbtiType}タイプ情報
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm text-gray-700">
                       <h3 className="font-medium mb-2">
-                        {typeDescriptions[latestMbtiType].name}
+                        {typeDescriptions[mbtiType].name}
                       </h3>
                       <p className="mb-4">
-                        {typeDescriptions[latestMbtiType].description}
+                        {typeDescriptions[mbtiType].description}
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -310,7 +313,7 @@ export default async function ProfilePage() {
                             長所
                           </h4>
                           <ul className="list-disc list-inside space-y-1">
-                            {typeDescriptions[latestMbtiType].strengths.map(
+                            {typeDescriptions[mbtiType].strengths.map(
                               (strength, i) => (
                                 <li key={i}>{strength}</li>
                               )
@@ -323,7 +326,7 @@ export default async function ProfilePage() {
                             短所
                           </h4>
                           <ul className="list-disc list-inside space-y-1">
-                            {typeDescriptions[latestMbtiType].weaknesses.map(
+                            {typeDescriptions[mbtiType].weaknesses.map(
                               (weakness, i) => (
                                 <li key={i}>{weakness}</li>
                               )

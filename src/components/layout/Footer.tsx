@@ -82,7 +82,7 @@ export function Footer() {
           <div className="md:col-span-1">
             <h3 className="text-md font-bold mb-3 text-gray-800">フォロー</h3>
             <div className="flex space-x-4">
-              <Link
+              {/* <Link
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -97,9 +97,9 @@ export function Footer() {
                 className="text-gray-500 hover:text-blue-400 transition-colors"
               >
                 <Twitter size={20} />
-              </Link>
+              </Link> */}
               <Link
-                href="mailto:contact@mbtiapp.example.com"
+                href="mailto:mbtiapp3@gmail.com"
                 className="text-gray-500 hover:text-red-500 transition-colors"
               >
                 <Mail size={20} />

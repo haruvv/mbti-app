@@ -301,7 +301,7 @@ export default async function UserProfilePage({
                     </div>
 
                     {/* ソーシャルリンク */}
-                    {(socialLinks.twitter ||
+                    {/* {(socialLinks.twitter ||
                       socialLinks.instagram ||
                       socialLinks.website) && (
                       <div className="flex gap-3 mt-3">
@@ -336,7 +336,7 @@ export default async function UserProfilePage({
                           </a>
                         )}
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   {/* フォロー数 */}

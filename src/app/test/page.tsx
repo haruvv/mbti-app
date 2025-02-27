@@ -7,6 +7,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { QUESTIONS } from "../data/questions";
 import { calculateMBTIType } from "../utils/mbti";
+import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Play,
+  Info,
+  ChevronRight,
+  Brain,
+  Users,
+  LineChart,
+  Clock,
+} from "lucide-react";
 
 export default function TestPage() {
   const [currentPage, setCurrentPage] = useState(0);
@@ -62,129 +73,186 @@ export default function TestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      {/* ヘッダー部分 */}
-      <div className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <Link
-            href="/test/about"
-            className="text-indigo-600 hover:text-indigo-800 flex items-center"
-          >
-            <ArrowLeft size={16} className="mr-1" />
-            診断説明に戻る
-          </Link>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative overflow-hidden">
+      {/* 装飾的な背景要素 */}
+      <div className="absolute top-20 -right-20 w-96 h-96 bg-indigo-100 rounded-full opacity-30 blur-3xl"></div>
+      <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-100 rounded-full opacity-30 blur-3xl"></div>
 
-      {/* プログレスバー */}
-      <div className="bg-white shadow-sm border-t">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-gray-600">
-              ページ {currentPage + 1} / {totalPages}
-            </span>
-            <span className="text-sm font-medium text-indigo-600">
-              {progress}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-              className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-in-out"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
+      <div className="container mx-auto max-w-6xl px-4 py-16 relative z-10">
+        {/* ヒーローセクション */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600">
+            あなたの本当の性格を発見しよう
+          </h1>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            科学的根拠に基づいたMBTI診断テストで、あなたの思考パターンと行動特性を分析し、
+            16タイプのどれに最も適合するかを解明します。
+          </p>
+        </motion.div>
 
-      {/* 質問部分 */}
-      <div className="container mx-auto px-4 py-10 pb-24 max-w-3xl">
-        <AnimatePresence mode="wait">
+        {/* メインコンテンツ */}
+        <div className="grid md:grid-cols-2 gap-8 mb-16">
+          {/* 左側：診断テスト開始カード */}
           <motion.div
-            key={currentPage}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-xl overflow-hidden border border-indigo-50 hover:shadow-2xl transition-all duration-300"
           >
-            <div className="space-y-6">
-              {currentQuestions.map((question, index) => {
-                const questionIndex = currentPage * questionsPerPage + index;
-                return (
-                  <div
-                    key={questionIndex}
-                    className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
-                  >
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                      {index + 1}. {question.text}
-                    </h2>
-
-                    <div className="flex flex-col space-y-3">
-                      <div className="grid grid-cols-5 gap-2">
-                        {[1, 2, 3, 4, 5].map((value) => (
-                          <button
-                            key={value}
-                            onClick={() => handleAnswer(index, value)}
-                            className={`relative h-14 rounded-lg transition-all duration-200 ${
-                              answers[questionIndex] === value
-                                ? "bg-indigo-600 text-white"
-                                : "bg-gray-100 hover:bg-indigo-100 text-gray-700"
-                            }`}
-                          >
-                            {answers[questionIndex] === value && (
-                              <CheckCircle className="absolute top-1 right-1 w-4 h-4" />
-                            )}
-                            <span>{value}</span>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-500 px-2">
-                        <span>強く反対</span>
-                        <span>中立</span>
-                        <span>強く同意</span>
-                      </div>
-                    </div>
+            <div className="p-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:rotate-12 transition-transform duration-300">
+                <Play className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4 text-center">
+                診断テストを開始
+              </h2>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 mt-1 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                    <Clock className="h-4 w-4" />
                   </div>
-                );
-              })}
+                  <div className="ml-4">
+                    <h3 className="font-medium">所要時間: 約5分</h3>
+                    <p className="text-sm text-gray-500">
+                      簡単な質問に答えるだけ
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 mt-1 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                    <Brain className="h-4 w-4" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-medium">科学的な分析</h3>
+                    <p className="text-sm text-gray-500">
+                      4つの軸で16タイプを正確に診断
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 mt-1 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                    <LineChart className="h-4 w-4" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-medium">詳細な結果</h3>
+                    <p className="text-sm text-gray-500">
+                      あなたの強みと弱み、適性を解説
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Link href="/test/questions">
+                <button className="w-full py-4 px-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center group">
+                  テストを始める
+                  <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
             </div>
           </motion.div>
-        </AnimatePresence>
-      </div>
 
-      {/* ナビゲーションボタン */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
-        <div className="container mx-auto px-4 py-4 flex justify-between">
-          <button
-            onClick={handlePrev}
-            disabled={currentPage === 0}
-            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-              currentPage === 0
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-indigo-600 hover:bg-indigo-50"
-            }`}
+          {/* 右側：MBTIについての情報 */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="bg-white rounded-2xl shadow-xl overflow-hidden border border-purple-50 hover:shadow-2xl transition-all duration-300"
           >
-            <ArrowLeft size={16} className="mr-1" />
-            前のページ
-          </button>
+            <div className="p-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:rotate-12 transition-transform duration-300">
+                <Info className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4 text-center">
+                MBTIについて
+              </h2>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                マイヤーズ・ブリッグス・タイプ指標（MBTI）は、カール・ユングの心理学理論に基づく性格タイプの分類法です。
+                世界中で使用されており、自己理解と他者との関係構築に役立ちます。
+              </p>
 
-          <button
-            onClick={handleNext}
-            disabled={false}
-            className={`flex items-center px-6 py-2 rounded-lg transition-colors ${
-              false
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
-            }`}
-          >
-            {currentPage < totalPages - 1 ? (
-              <>
-                次のページ <ArrowRight size={16} className="ml-1" />
-              </>
-            ) : (
-              "結果を見る"
-            )}
-          </button>
+              <div className="space-y-3 mb-8">
+                <div className="flex items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                  <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3">
+                    E/I
+                  </span>
+                  <span className="text-sm">
+                    外向型(Extraversion) / 内向型(Introversion)
+                  </span>
+                </div>
+                <div className="flex items-center p-3 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg">
+                  <span className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold mr-3">
+                    S/N
+                  </span>
+                  <span className="text-sm">
+                    感覚型(Sensing) / 直感型(iNtuition)
+                  </span>
+                </div>
+                <div className="flex items-center p-3 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg">
+                  <span className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 font-bold mr-3">
+                    T/F
+                  </span>
+                  <span className="text-sm">
+                    思考型(Thinking) / 感情型(Feeling)
+                  </span>
+                </div>
+                <div className="flex items-center p-3 bg-gradient-to-r from-purple-50 to-fuchsia-50 rounded-lg">
+                  <span className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold mr-3">
+                    J/P
+                  </span>
+                  <span className="text-sm">
+                    判断型(Judging) / 知覚型(Perceiving)
+                  </span>
+                </div>
+              </div>
+
+              <Link href="/test/about">
+                <button className="w-full py-4 px-8 bg-white border-2 border-purple-200 hover:border-purple-300 text-purple-700 font-medium rounded-xl shadow-sm hover:shadow transition-all duration-300 flex items-center justify-center group">
+                  詳細を見る
+                  <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
+            </div>
+          </motion.div>
         </div>
+
+        {/* 追加情報セクション */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="bg-white bg-opacity-70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100"
+        >
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Users className="h-6 w-6 text-indigo-600" />
+              </div>
+              <h3 className="font-semibold mb-1">サイト利用者数</h3>
+              <p className="text-xl font-bold text-indigo-600">7,500+</p>
+              <p className="text-xs text-gray-500">MBTIを発見した人々</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <LineChart className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold mb-1">診断精度</h3>
+              <p className="text-xl font-bold text-purple-600">95%</p>
+              <p className="text-xs text-gray-500">高い一致率を誇る結果</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Brain className="h-6 w-6 text-pink-600" />
+              </div>
+              <h3 className="font-semibold mb-1">平均診断時間</h3>
+              <p className="text-xl font-bold text-pink-600">4分36秒</p>
+              <p className="text-xs text-gray-500">迅速に結果がわかります</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
