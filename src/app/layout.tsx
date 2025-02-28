@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { UserProvider } from "@/contexts/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,14 +29,19 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
-        <body className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-          <Toaster />
-        </body>
-      </html>
+      <UserProvider>
+        <html
+          lang="ja"
+          className={`${geistSans.variable} ${geistMono.variable}`}
+        >
+          <body className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <Toaster />
+          </body>
+        </html>
+      </UserProvider>
     </ClerkProvider>
   );
 }

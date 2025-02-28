@@ -1,10 +1,18 @@
-import { useUser } from "@clerk/nextjs";
+import { useUserContext } from "@/contexts/UserContext";
+import Link from "next/link";
+import { User } from "lucide-react";
 
-const { user } = useUser();
-const userHandle = user?.publicMetadata?.handle || user?.id;
+export function Navbar() {
+  const { handle, isHandleLoading } = useUserContext();
 
-// リンクを変更
-<Link href={`/profile/${userHandle}`}>
-  <User className="mr-2 h-5 w-5" />
-  マイページ
-</Link>;
+  return (
+    <Link
+      href={`/profile/${handle}`}
+      className="flex items-center"
+      aria-disabled={isHandleLoading}
+    >
+      <User className="mr-2 h-5 w-5" />
+      マイページ
+    </Link>
+  );
+}

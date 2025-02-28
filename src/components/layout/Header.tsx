@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import UserSearch from "@/components/features/search/UserSearch";
 import { BarChart3, Home, User, Menu, X, Star } from "lucide-react";
+import { useUserContext } from "@/contexts/UserContext";
 
 // プロフィールタイプの定義
 type Profile = {
@@ -32,6 +33,7 @@ export default function Header() {
   const { user } = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { handle, isHandleLoading } = useUserContext();
 
   useEffect(() => {
     async function fetchProfile() {
@@ -121,7 +123,7 @@ export default function Header() {
 
           <SignedIn>
             <Link
-              href={profile?.handle ? `/profile/${profile.handle}` : "/profile"}
+              href={`/profile/${handle}`}
               className="flex items-center gap-2 p-2 rounded-md hover:bg-purple-50 transition-all"
             >
               {profile?.custom_image_url ? (

@@ -15,9 +15,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useUserContext } from "@/contexts/UserContext";
 
 export default function ProfileEditPage() {
   const { user, isLoaded } = useUser();
+  const { updateHandle, refreshHandle } = useUserContext();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,13 +112,19 @@ export default function ProfileEditPage() {
 
     if (name === "handle") {
       // handleバリデーション
-      const isValid = /^[a-zA-Z0-9_]{1,15}$/.test(value);
-
-      if (!isValid && value) {
+      if (!value.trim()) {
+        setHandleError("ユーザーIDは必須です");
+      } else if (!/^[a-zA-Z0-9_]{1,15}$/.test(value)) {
         setHandleError("ユーザーIDは1-15文字の半角英数字と_のみ使用できます");
       } else {
         setHandleError("");
       }
+    }
+
+    if (name === "displayName" && !value.trim()) {
+      setError("表示名は必須です");
+    } else {
+      setError(null);
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -269,28 +277,50 @@ export default function ProfileEditPage() {
 
   // handleのバリデーション
   const validateHandle = () => {
-    // 既に他のバリデーションでエラーがある場合
-    if (handleError) return false;
+    // 空チェックを追加
+    if (!formData.handle.trim()) {
+      setHandleError("ユーザーIDは必須です");
+      return false;
+    }
 
-    // 空の場合は許可（必須ではない）
-    if (!formData.handle) return true;
+    // 既存のフォーマットチェック
+    const isValid = /^[a-zA-Z0-9_]{1,15}$/.test(formData.handle);
+    if (!isValid) {
+      setHandleError("ユーザーIDは1-15文字の半角英数字と_のみ使用できます");
+      return false;
+    }
 
-    // 半角英数字とアンダースコアのみ、1-15文字
-    return /^[a-zA-Z0-9_]{1,15}$/.test(formData.handle);
+    setHandleError("");
+    return true;
+  };
+
+  // 表示名のバリデーション関数を追加
+  const validateDisplayName = () => {
+    if (!formData.displayName.trim()) {
+      setError("表示名は必須です");
+      return false;
+    }
+    return true;
   };
 
   // フォーム送信
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ソーシャルリンクのバリデーション
-    if (!validateSocialLinks()) {
+    // 表示名のバリデーション
+    if (!validateDisplayName()) {
+      toast.error("表示名は必須です");
       return;
     }
 
     // handleのバリデーション
     if (!validateHandle()) {
-      toast.error("ユーザーIDのフォーマットが不正です");
+      toast.error(handleError || "ユーザーIDのフォーマットが不正です");
+      return;
+    }
+
+    // ソーシャルリンクのバリデーション
+    if (!validateSocialLinks()) {
       return;
     }
 
@@ -319,8 +349,19 @@ export default function ProfileEditPage() {
       }
 
       toast.success("プロフィールを更新しました");
-      router.push("/profile");
+
+      // ハンドルを更新する時に確実にContextとローカルストレージを更新
+      if (formData.handle) {
+        updateHandle(formData.handle);
+        // 明示的にセッションストレージにも保存（冗長かもしれませんが確実にするため）
+        sessionStorage.setItem("userHandle", formData.handle);
+      }
+
+      // 強制的にコンテキストを再読み込み
+      await refreshHandle();
+
       router.refresh();
+      router.push(`/profile/${formData.handle}`);
     } catch (error) {
       console.error("Error submitting form:", error);
       setError(
@@ -456,7 +497,7 @@ export default function ProfileEditPage() {
                   htmlFor="displayName"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  表示名
+                  表示名 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -464,10 +505,13 @@ export default function ProfileEditPage() {
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleInputChange}
-                  maxLength={30}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="あなたの名前（30文字以内）"
+                  placeholder="あなたの表示名"
                 />
+                {!formData.displayName && (
+                  <p className="mt-1 text-sm text-red-600">表示名は必須です</p>
+                )}
               </div>
 
               {/* ユーザーID (handle) */}
@@ -475,9 +519,9 @@ export default function ProfileEditPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <label
                     htmlFor="handle"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    ユーザーID
+                    ユーザーID <span className="text-red-500">*</span>
                   </label>
                   <TooltipProvider>
                     <Tooltip>
@@ -601,88 +645,6 @@ export default function ProfileEditPage() {
                   ))}
                 </div>
               </div>
-
-              {/* ソーシャルリンク */}
-              {/* <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
-                  ソーシャルリンク
-                </h3> */}
-
-              {/* Twitter */}
-              {/* <div className="mb-3">
-                  <label
-                    htmlFor="twitter"
-                    className="block text-sm text-gray-600 mb-1"
-                  >
-                    Twitter
-                  </label>
-                  <input
-                    type="url"
-                    id="twitter"
-                    name="twitter"
-                    value={formData.socialLinks.twitter}
-                    onChange={handleSocialLinkChange}
-                    className={`w-full px-3 py-2 border ${
-                      socialLinkErrors.twitter
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-                    placeholder="https://x.com/yourusername"
-                  />
-                  {socialLinkErrors.twitter && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {socialLinkErrors.twitter}
-                    </p>
-                  )}
-                </div> */}
-
-              {/* Instagram */}
-              {/* <div className="mb-3">
-                  <label
-                    htmlFor="instagram"
-                    className="block text-sm text-gray-600 mb-1"
-                  >
-                    Instagram
-                  </label>
-                  <input
-                    type="url"
-                    id="instagram"
-                    name="instagram"
-                    value={formData.socialLinks.instagram}
-                    onChange={handleSocialLinkChange}
-                    className={`w-full px-3 py-2 border ${
-                      socialLinkErrors.instagram
-                        ? "border-red-500"
-                        : "border-gray-300"
-                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-                    placeholder="https://instagram.com/yourusername"
-                  />
-                  {socialLinkErrors.instagram && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {socialLinkErrors.instagram}
-                    </p>
-                  )}
-                </div> */}
-
-              {/* Webサイト */}
-              {/* <div>
-                  <label
-                    htmlFor="website"
-                    className="block text-sm text-gray-600 mb-1"
-                  >
-                    Webサイト
-                  </label>
-                  <input
-                    type="url"
-                    id="website"
-                    name="website"
-                    value={formData.socialLinks.website}
-                    onChange={handleSocialLinkChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="https://yourwebsite.com"
-                  />
-                </div>
-              </div> */}
 
               {/* エラーメッセージ */}
               {error && (
