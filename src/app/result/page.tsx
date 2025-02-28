@@ -33,6 +33,7 @@ import { LearningStyle } from "@/components/features/mbti/LearningStyle";
 import { StrengthsWeaknesses } from "@/components/features/mbti/StrengthsWeaknesses";
 import { RelatedContent } from "@/components/features/mbti/RelatedContent";
 import { CompatibilityInfo } from "@/components/features/mbti/CompatibilityInfo";
+import { SaveResult } from "./SaveResult";
 
 export default function ResultPage() {
   const searchParams = useSearchParams();
@@ -86,6 +87,8 @@ export default function ResultPage() {
 
   return (
     <PageContainer maxWidth="6xl">
+      {isValidType && <SaveResult mbtiType={validMbtiType} />}
+
       <PageHeader
         title={`あなたは${mbtiType}型です`}
         subtitle={
