@@ -70,11 +70,20 @@ export default function ContactPage() {
     setSubmitError(null);
 
     try {
-      // 実際のAPIエンドポイントに置き換えてください
-      // 例: await fetch('/api/contact', { method: 'POST', body: JSON.stringify(data) });
+      // 実際のAPIエンドポイントに送信
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-      // 送信成功をシミュレート（実際の実装ではこの部分を修正）
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "エラーが発生しました");
+      }
 
       console.log("送信されたデータ:", data);
       setIsSubmitted(true);
