@@ -79,17 +79,6 @@ export function Footer() {
           </div>
 
           {/* ソーシャル */}
-          <div className="md:col-span-1">
-            <h3 className="text-md font-bold mb-3 text-gray-800">フォロー</h3>
-            <div className="flex space-x-4">
-              <Link
-                href="mailto:mbtiapp3@gmail.com"
-                className="text-gray-500 hover:text-purple-600 transition-colors"
-              >
-                <Mail size={20} />
-              </Link>
-            </div>
-          </div>
         </div>
 
         <div className="pt-6 border-t border-gray-200">
