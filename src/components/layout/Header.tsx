@@ -22,25 +22,36 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import UserSearch from "@/components/features/search/UserSearch";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Home, User, Menu, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // プロフィールタイプの定義
 type Profile = {
   display_name?: string;
   custom_image_url?: string;
+  handle?: string;
   // 他のプロフィール情報
 };
 
 export default function Header() {
   const { user, isSignedIn } = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
       if (!user) return;
-      const { data } = await getUserProfile(user.id);
-      if (data) setProfile(data);
+      try {
+        const { data } = await getUserProfile(user.id);
+        if (data) setProfile(data);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      }
     }
     fetchProfile();
   }, [user]);
@@ -56,8 +67,23 @@ export default function Header() {
     return "U";
   };
 
-  // ナビゲーションリンクの配列に追加
+  // ナビゲーションリンクのリスト
   const navLinks = [
+    {
+      href: "/",
+      label: "ホーム",
+      icon: <Home className="h-5 w-5" />,
+    },
+    {
+      href: "/test",
+      label: "診断テスト",
+      icon: <User className="h-5 w-5" />,
+    },
+    {
+      href: "/types",
+      label: "タイプ一覧",
+      icon: <User className="h-5 w-5" />,
+    },
     {
       href: "/ranking",
       label: "ランキング",
@@ -66,9 +92,10 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-white border-b sticky top-0 z-10 shadow-sm">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-50 w-full bg-white border-b shadow-sm">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        {/* ロゴ */}
+        <div className="flex items-center">
           <Link
             href="/"
             className="flex items-center space-x-2 transition-transform hover:scale-105"
@@ -77,84 +104,58 @@ export default function Header() {
               MBTI App
             </div>
           </Link>
-
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <Link href="/test" legacyBehavior passHref>
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      "hover:bg-indigo-50 transition-colors"
-                    )}
-                  >
-                    診断テスト
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/types" legacyBehavior passHref>
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      "hover:bg-indigo-50 transition-colors"
-                    )}
-                  >
-                    タイプ一覧
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/ranking" legacyBehavior passHref>
-                  <NavigationMenuLink
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      "hover:bg-indigo-50 transition-colors"
-                    )}
-                  >
-                    ランキング
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
         </div>
 
-        {/* 検索ボックス - デスクトップのみ表示 */}
+        {/* デスクトップナビゲーション（中画面以上） */}
+        <nav className="hidden md:flex items-center space-x-1">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* 検索ボックス - タブレット以上で表示 */}
         <div className="hidden md:block w-1/3 max-w-xs">
           <UserSearch />
         </div>
 
-        <SignedOut>
-          <div className="flex items-center gap-3">
-            <SignInButton>
-              <Button
-                variant="outline"
-                size="sm"
-                className="transition-all hover:shadow-md"
-              >
-                ログイン
-              </Button>
-            </SignInButton>
-            <SignUpButton>
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 shadow-sm hover:shadow transition-all"
-              >
-                登録
-              </Button>
-            </SignUpButton>
-          </div>
-        </SignedOut>
+        {/* 認証ボタン / ユーザーメニュー */}
+        <div className="flex items-center">
+          <SignedOut>
+            <div className="flex items-center gap-3">
+              <SignInButton>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="transition-all hover:shadow-md hidden sm:flex"
+                >
+                  ログイン
+                </Button>
+              </SignInButton>
+              <SignUpButton>
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 shadow-sm hover:shadow transition-all"
+                >
+                  登録
+                </Button>
+              </SignUpButton>
+            </div>
+          </SignedOut>
 
-        <SignedIn>
-          <div className="flex items-center">
+          <SignedIn>
+            {/* ユーザープロフィールリンク */}
             <Link
-              href="/profile"
+              href={profile?.handle ? `/profile/${profile.handle}` : "/profile"}
               className="flex items-center gap-2 hover:text-blue-600 transition-all p-2 rounded-md hover:bg-indigo-50 hover:shadow-sm"
             >
               {profile?.custom_image_url ? (
-                <div className="w-9 h-9 relative ring-2 ring-indigo-100 rounded-full">
+                <div className="w-9 h-9 relative ring-2 ring-indigo-100 rounded-full overflow-hidden">
                   <Image
                     src={profile.custom_image_url}
                     alt={profile?.display_name || "プロフィール"}
@@ -171,8 +172,54 @@ export default function Header() {
                 {profile?.display_name || user?.firstName || "ユーザー"}
               </span>
             </Link>
-          </div>
-        </SignedIn>
+          </SignedIn>
+
+          {/* モバイルメニューボタン - DropdownMenuを使用 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden ml-2"
+                aria-label="メニュー"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {navLinks.map((link) => (
+                <DropdownMenuItem key={link.href} asChild>
+                  <Link
+                    href={link.href}
+                    className="flex items-center p-2 cursor-pointer w-full"
+                  >
+                    <span className="mr-3 text-indigo-600">{link.icon}</span>
+                    {link.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+
+              <SignedOut>
+                <div className="border-t mt-2 pt-2">
+                  <DropdownMenuItem asChild>
+                    <SignInButton>
+                      <Button variant="outline" className="w-full mt-2">
+                        ログイン
+                      </Button>
+                    </SignInButton>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <SignUpButton>
+                      <Button className="w-full mt-2 bg-gradient-to-r from-indigo-600 to-blue-500">
+                        アカウント登録
+                      </Button>
+                    </SignUpButton>
+                  </DropdownMenuItem>
+                </div>
+              </SignedOut>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* 検索ボックス - モバイルのみ表示 */}

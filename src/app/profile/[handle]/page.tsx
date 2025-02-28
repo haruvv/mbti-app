@@ -192,26 +192,30 @@ export default async function UserProfilePage({
           {/* プロフィールカード */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
             {/* ヘッダー部分 */}
-            <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+            <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600 relative"></div>
 
             <div className="px-6 pb-6">
-              {/* アバター画像 */}
-              <div className="relative -mt-16 mb-4">
-                <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white shadow-sm">
-                  <Image
-                    src={profile.custom_image_url || "/default-avatar.png"}
-                    alt={displayName}
-                    width={128}
-                    height={128}
-                    className="object-cover w-full h-full"
-                  />
+              {/* アバターとプロフィールヘッダー情報 */}
+              <div className="relative flex flex-col sm:flex-row sm:items-end -mt-16 mb-6">
+                {/* アバター画像 */}
+                <div
+                  className="relative flex-shrink-0 mb-4 sm:mb-0 mx-auto sm:mx-0"
+                  style={{ width: "128px" }}
+                >
+                  <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white shadow-sm">
+                    <Image
+                      src={profile.custom_image_url || "/default-avatar.png"}
+                      alt={displayName}
+                      width={128}
+                      height={128}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* プロフィールヘッダー：名前とボタン */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold flex items-center flex-wrap">
+                {/* プロフィール基本情報 */}
+                <div className="sm:ml-6 flex-1 text-center sm:text-left">
+                  <h1 className="text-2xl font-bold flex flex-wrap items-center justify-center sm:justify-start">
                     {displayName}
                     {mbtiType && (
                       <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -219,15 +223,14 @@ export default async function UserProfilePage({
                       </span>
                     )}
                   </h1>
-                  <p className="text-gray-500 flex items-center mt-1">
+                  <p className="text-gray-500 flex items-center mt-1 justify-center sm:justify-start">
                     <AtSign size={16} className="mr-1" />
                     {userData.handle}
                   </p>
                 </div>
 
-                {/* アクションボタンエリア */}
-                <div className="self-start flex-shrink-0">
-                  {/* ログイン状態とプロフィール所有者に基づいたボタン表示 */}
+                {/* アクションボタン */}
+                <div className="mt-4 sm:mt-0 sm:ml-auto flex-shrink-0">
                   {loggedInUserId ? (
                     isOwnProfile ? (
                       <Link href="/profile/edit">
@@ -243,15 +246,25 @@ export default async function UserProfilePage({
                       />
                     )
                   ) : (
-                    <div className="text-sm text-gray-500 bg-gray-50 p-2 rounded">
+                    <div className="text-sm text-gray-500 bg-gray-50 p-2 rounded border border-gray-100">
                       ログインするとフォローできます
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* プロフィール情報コンテンツ */}
-              <div className="space-y-4 mb-6">
+              {/* フォロー情報 */}
+              <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <FollowStats
+                  userId={userData.user_id || userData.id}
+                  handle={userData.handle}
+                  followingCount={followingCount}
+                  followersCount={followersCount}
+                />
+              </div>
+
+              {/* プロフィール詳細情報セクション */}
+              <div className="space-y-4">
                 {/* 自己紹介 */}
                 {profile.bio && (
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
@@ -272,14 +285,14 @@ export default async function UserProfilePage({
                     プロフィール情報
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center px-3 py-2 bg-white rounded">
+                    <div className="flex items-center px-3 py-2 bg-white rounded border border-gray-50">
                       <Calendar size={16} className="mr-1.5 text-gray-500" />
                       <span className="text-sm">
                         登録日: <FormattedDate date={joinDate} />
                       </span>
                     </div>
 
-                    <div className="flex items-center px-3 py-2 bg-white rounded">
+                    <div className="flex items-center px-3 py-2 bg-white rounded border border-gray-50">
                       <Activity size={16} className="mr-1.5 text-gray-500" />
                       <span className="text-sm">
                         診断回数: {testCount || 0}回
@@ -297,13 +310,13 @@ export default async function UserProfilePage({
                       <Globe size={16} className="mr-1.5" />
                       ソーシャルリンク
                     </h3>
-                    <div className="flex flex-wrap gap-4 mt-2">
+                    <div className="flex flex-wrap gap-3 mt-2">
                       {socialLinks.twitter && (
                         <a
                           href={`https://twitter.com/${socialLinks.twitter}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-blue-400 transition-colors"
+                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-blue-400 hover:border-blue-200 transition-colors"
                         >
                           <Twitter size={16} className="mr-1.5" />
                           <span className="text-sm">Twitter</span>
@@ -314,7 +327,7 @@ export default async function UserProfilePage({
                           href={`https://instagram.com/${socialLinks.instagram}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-pink-500 transition-colors"
+                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-pink-500 hover:border-pink-200 transition-colors"
                         >
                           <Instagram size={16} className="mr-1.5" />
                           <span className="text-sm">Instagram</span>
@@ -325,7 +338,7 @@ export default async function UserProfilePage({
                           href={socialLinks.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-green-500 transition-colors"
+                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-green-500 hover:border-green-200 transition-colors"
                         >
                           <Globe size={16} className="mr-1.5" />
                           <span className="text-sm">Website</span>
@@ -335,14 +348,6 @@ export default async function UserProfilePage({
                   </div>
                 )}
               </div>
-
-              {/* フォロー情報 */}
-              <FollowStats
-                userId={userData.user_id || userData.id}
-                handle={userData.handle}
-                followingCount={followingCount}
-                followersCount={followersCount}
-              />
             </div>
           </div>
 
