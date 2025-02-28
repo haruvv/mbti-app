@@ -20,8 +20,10 @@ import {
   BadgeCheck,
   AtSign,
   Activity,
+  Edit2,
 } from "lucide-react";
 import { DebugPanel } from "@/components/debug/DebugPanel";
+import { Button } from "@/components/ui/button";
 
 // 最上部でデバッグ管理用の定数を追加
 const DEBUG_MODE = process.env.NODE_ENV === "development";
@@ -40,10 +42,6 @@ export default async function UserProfilePage({
 
   // Clerkから取得したログインユーザーID - 非同期処理を待つ
   const { userId: clerkUserId } = await auth();
-
-  // デバッグログ
-  if (DEBUG_MODE)
-    console.log("Debug: リクエストパラメータ", { handle, tab, clerkUserId });
 
   try {
     // ユーザー情報の取得（詳細データを含む）
@@ -66,15 +64,6 @@ export default async function UserProfilePage({
       )
       .eq("handle", handle)
       .single();
-
-    // デバッグログ
-    if (DEBUG_MODE) {
-      console.log("user_profiles検索結果:", {
-        success: !profileError,
-        data: profileUser,
-        error: profileError,
-      });
-    }
 
     // ユーザーが見つからない場合、users テーブルで再検索
     let userData = profileUser;
@@ -104,14 +93,6 @@ export default async function UserProfilePage({
         .eq("handle", handle)
         .single();
 
-      if (DEBUG_MODE) {
-        console.log("users検索結果:", {
-          success: !usersError,
-          data: userFromUsersTable,
-          error: usersError,
-        });
-      }
-
       if (!userFromUsersTable) {
         console.log(`ユーザー "${handle}" は見つかりませんでした`);
         return notFound();
@@ -126,6 +107,7 @@ export default async function UserProfilePage({
     let isOwnProfile = false; // 表示中のプロフィールが自分自身のものか
 
     if (clerkUserId) {
+      // ログイン中のユーザーのSupabase IDを取得
       const { data: loggedInUser } = await supabase
         .from("users")
         .select("id")
@@ -160,7 +142,7 @@ export default async function UserProfilePage({
     const followingCount = followCounts?.following_count || 0;
     const followersCount = followCounts?.followers_count || 0;
 
-    // テスト結果を取得（もしあれば）
+    // 最新の診断結果を取得
     const { data: testResults } = await supabase
       .from("test_results")
       .select("*")
@@ -175,19 +157,6 @@ export default async function UserProfilePage({
       .eq("user_id", userData.user_id || userData.id);
 
     const latestTestResult = testResults?.[0];
-
-    // デバッグログ
-    if (DEBUG_MODE) {
-      console.log("診断統計:", {
-        testCount,
-        latestTest: latestTestResult
-          ? {
-              type: latestTestResult.mbti_type,
-              date: latestTestResult.created_at,
-            }
-          : null,
-      });
-    }
 
     // 表示データを準備
     const profile = userData.user_profiles || userData;
@@ -214,11 +183,10 @@ export default async function UserProfilePage({
       { title: "テスト結果", data: latestTestResult },
     ];
 
-    // デバッグビュー（開発環境でのみ表示）
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-        {/* 共通デバッグパネルに置き換え */}
-        <DebugPanel data={userData} sections={debugSections} />
+        {/* DEBUG_MODEの場合のみデバッグパネルを表示 */}
+        {DEBUG_MODE && <DebugPanel data={userData} sections={debugSections} />}
 
         <div className="container mx-auto max-w-4xl px-4 py-8">
           {/* プロフィールカード */}
@@ -229,7 +197,7 @@ export default async function UserProfilePage({
             <div className="px-6 pb-6">
               {/* アバター画像 */}
               <div className="relative -mt-16 mb-4">
-                <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white">
+                <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-white shadow-sm">
                   <Image
                     src={profile.custom_image_url || "/default-avatar.png"}
                     alt={displayName}
@@ -240,114 +208,141 @@ export default async function UserProfilePage({
                 </div>
               </div>
 
-              {/* プロフィール情報 */}
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                    <div>
-                      <h1 className="text-2xl font-bold flex items-center">
-                        {displayName}
-                        {mbtiType && (
-                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                            {mbtiType}
-                          </span>
-                        )}
-                      </h1>
-                      <p className="text-gray-500 flex items-center mt-1">
-                        <AtSign size={16} className="mr-1" />
-                        {userData.handle}
-                      </p>
-                    </div>
+              {/* プロフィールヘッダー：名前とボタン */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold flex items-center flex-wrap">
+                    {displayName}
+                    {mbtiType && (
+                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        {mbtiType}
+                      </span>
+                    )}
+                  </h1>
+                  <p className="text-gray-500 flex items-center mt-1">
+                    <AtSign size={16} className="mr-1" />
+                    {userData.handle}
+                  </p>
+                </div>
 
-                    {/* フォローボタン表示 */}
-                    {loggedInUserId && !isOwnProfile && (
+                {/* アクションボタンエリア */}
+                <div className="self-start flex-shrink-0">
+                  {/* ログイン状態とプロフィール所有者に基づいたボタン表示 */}
+                  {loggedInUserId ? (
+                    isOwnProfile ? (
+                      <Link href="/profile/edit">
+                        <Button className="w-full sm:w-auto gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+                          <Edit2 className="h-4 w-4" />
+                          プロフィール編集
+                        </Button>
+                      </Link>
+                    ) : (
                       <FollowButton
                         targetUserId={userData.user_id || userData.id}
                         initialIsFollowing={isFollowing}
                       />
-                    )}
-                  </div>
-
-                  {/* ユーザー詳細情報 */}
-                  <div className="space-y-3 mb-6">
-                    {profile.bio && (
-                      <p className="text-gray-700 whitespace-pre-wrap">
-                        {profile.bio}
-                      </p>
-                    )}
-
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="font-medium text-gray-700 mb-2 flex items-center">
-                          <User size={16} className="mr-1.5" />
-                          プロフィール情報
-                        </h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center">
-                            <Calendar size={16} className="mr-1.5" />
-                            <span className="text-sm">
-                              登録日: <FormattedDate date={joinDate} />
-                            </span>
-                          </div>
-
-                          <div className="flex items-center">
-                            <Activity size={16} className="mr-1.5" />
-                            <span className="text-sm">
-                              診断回数: {testCount || 0}回
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                    )
+                  ) : (
+                    <div className="text-sm text-gray-500 bg-gray-50 p-2 rounded">
+                      ログインするとフォローできます
                     </div>
-
-                    {/* ソーシャルリンク */}
-                    {/* {(socialLinks.twitter ||
-                      socialLinks.instagram ||
-                      socialLinks.website) && (
-                      <div className="flex gap-3 mt-3">
-                        {socialLinks.twitter && (
-                          <a
-                            href={`https://twitter.com/${socialLinks.twitter}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 hover:text-blue-400"
-                          >
-                            <Twitter size={20} />
-                          </a>
-                        )}
-                        {socialLinks.instagram && (
-                          <a
-                            href={`https://instagram.com/${socialLinks.instagram}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 hover:text-pink-500"
-                          >
-                            <Instagram size={20} />
-                          </a>
-                        )}
-                        {socialLinks.website && (
-                          <a
-                            href={socialLinks.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 hover:text-green-500"
-                          >
-                            <Globe size={20} />
-                          </a>
-                        )}
-                      </div>
-                    )} */}
-                  </div>
-
-                  {/* フォロー数 */}
-                  <FollowStats
-                    userId={userData.user_id || userData.id}
-                    handle={userData.handle}
-                    followingCount={followingCount}
-                    followersCount={followersCount}
-                  />
+                  )}
                 </div>
               </div>
+
+              {/* プロフィール情報コンテンツ */}
+              <div className="space-y-4 mb-6">
+                {/* 自己紹介 */}
+                {profile.bio && (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <h3 className="font-medium text-gray-700 mb-2 flex items-center">
+                      <User size={16} className="mr-1.5" />
+                      自己紹介
+                    </h3>
+                    <p className="text-gray-700 whitespace-pre-wrap break-words overflow-hidden max-w-full">
+                      {profile.bio}
+                    </p>
+                  </div>
+                )}
+
+                {/* プロフィール情報 */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <h3 className="font-medium text-gray-700 mb-2 flex items-center">
+                    <BadgeCheck size={16} className="mr-1.5 text-indigo-600" />
+                    プロフィール情報
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center px-3 py-2 bg-white rounded">
+                      <Calendar size={16} className="mr-1.5 text-gray-500" />
+                      <span className="text-sm">
+                        登録日: <FormattedDate date={joinDate} />
+                      </span>
+                    </div>
+
+                    <div className="flex items-center px-3 py-2 bg-white rounded">
+                      <Activity size={16} className="mr-1.5 text-gray-500" />
+                      <span className="text-sm">
+                        診断回数: {testCount || 0}回
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ソーシャルリンク */}
+                {(socialLinks.twitter ||
+                  socialLinks.instagram ||
+                  socialLinks.website) && (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <h3 className="font-medium text-gray-700 mb-2 flex items-center">
+                      <Globe size={16} className="mr-1.5" />
+                      ソーシャルリンク
+                    </h3>
+                    <div className="flex flex-wrap gap-4 mt-2">
+                      {socialLinks.twitter && (
+                        <a
+                          href={`https://twitter.com/${socialLinks.twitter}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-blue-400 transition-colors"
+                        >
+                          <Twitter size={16} className="mr-1.5" />
+                          <span className="text-sm">Twitter</span>
+                        </a>
+                      )}
+                      {socialLinks.instagram && (
+                        <a
+                          href={`https://instagram.com/${socialLinks.instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-pink-500 transition-colors"
+                        >
+                          <Instagram size={16} className="mr-1.5" />
+                          <span className="text-sm">Instagram</span>
+                        </a>
+                      )}
+                      {socialLinks.website && (
+                        <a
+                          href={socialLinks.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center px-3 py-1.5 bg-white rounded border border-gray-200 text-gray-600 hover:text-green-500 transition-colors"
+                        >
+                          <Globe size={16} className="mr-1.5" />
+                          <span className="text-sm">Website</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* フォロー情報 */}
+              <FollowStats
+                userId={userData.user_id || userData.id}
+                handle={userData.handle}
+                followingCount={followingCount}
+                followersCount={followersCount}
+              />
             </div>
           </div>
 
@@ -377,9 +372,9 @@ export default async function UserProfilePage({
                       <p className="mb-4">{typeDescription.description}</p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-medium text-indigo-700 mb-2">
-                            長所
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-green-800 mb-2">
+                            強み
                           </h4>
                           <ul className="list-disc list-inside space-y-1">
                             {typeDescription.strengths.map((strength, i) => (
@@ -388,9 +383,9 @@ export default async function UserProfilePage({
                           </ul>
                         </div>
 
-                        <div>
-                          <h4 className="font-medium text-indigo-700 mb-2">
-                            短所
+                        <div className="bg-orange-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-orange-800 mb-2">
+                            弱み
                           </h4>
                           <ul className="list-disc list-inside space-y-1">
                             {typeDescription.weaknesses.map((weakness, i) => (
@@ -404,7 +399,7 @@ export default async function UserProfilePage({
                 </Card>
               )}
 
-              {/* お気に入りタイプ */}
+              {/* お気に入りMBTIタイプ */}
               {profile.bookmarked_types &&
                 profile.bookmarked_types.length > 0 && (
                   <Card>
@@ -421,7 +416,7 @@ export default async function UserProfilePage({
                             key={type}
                             className="text-center p-3 bg-gray-50 rounded-lg"
                           >
-                            <div className="font-bold text-indigo-600">
+                            <div className="font-bold text-lg text-indigo-600">
                               {type}
                             </div>
                             <div className="text-xs text-gray-500">
@@ -436,78 +431,62 @@ export default async function UserProfilePage({
             </TabsContent>
 
             <TabsContent value="posts">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center py-12 text-gray-500">
-                    <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>まだ投稿がありません</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="text-center py-12 text-gray-500">
+                <p>投稿機能は準備中です</p>
+              </div>
             </TabsContent>
 
             <TabsContent value="test">
+              {/* 診断結果 */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center">
-                    <Activity className="mr-2 h-5 w-5 text-indigo-500" />
+                    <BarChart className="mr-2 h-5 w-5 text-blue-500" />
                     診断結果
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-4 flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                    <div className="flex items-center">
-                      <BarChart className="text-indigo-500 h-5 w-5 mr-2" />
-                      <span>合計診断回数</span>
-                    </div>
-                    <span className="font-semibold text-lg text-indigo-600">
-                      {testCount || 0}回
-                    </span>
-                  </div>
-
                   {latestTestResult ? (
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">
-                          最新の診断結果
-                        </h3>
-                        <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="text-lg font-bold text-indigo-600">
+                    <div>
+                      <div className="mb-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-medium flex items-center">
+                            最新の診断結果:
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {latestTestResult.mbti_type}
                             </span>
                             <FormattedDate
                               date={latestTestResult.created_at}
                               className="text-xs text-gray-500"
                             />
-                          </div>
-
-                          {/* 既存の診断結果の詳細表示 */}
-                          {latestTestResult.scores && (
-                            <div className="space-y-4">
-                              <TypeBar
-                                left="内向的 (I)"
-                                right="外向的 (E)"
-                                value={latestTestResult.scores.E || 50}
-                              />
-                              <TypeBar
-                                left="現実的 (S)"
-                                right="直感的 (N)"
-                                value={latestTestResult.scores.N || 50}
-                              />
-                              <TypeBar
-                                left="論理的 (T)"
-                                right="感情的 (F)"
-                                value={latestTestResult.scores.F || 50}
-                              />
-                              <TypeBar
-                                left="計画的 (J)"
-                                right="柔軟的 (P)"
-                                value={latestTestResult.scores.P || 50}
-                              />
-                            </div>
-                          )}
+                          </span>
                         </div>
+
+                        {/* 既存の診断結果の詳細表示 */}
+                        {latestTestResult.scores && (
+                          <div className="space-y-4">
+                            <TypeBar
+                              left="内向的 (I)"
+                              right="外向的 (E)"
+                              value={latestTestResult.scores.E || 50}
+                            />
+                            <TypeBar
+                              left="現実的 (S)"
+                              right="直感的 (N)"
+                              value={latestTestResult.scores.N || 50}
+                            />
+                            <TypeBar
+                              left="論理的 (T)"
+                              right="感情的 (F)"
+                              value={latestTestResult.scores.F || 50}
+                            />
+                            <TypeBar
+                              left="計画的 (J)"
+                              right="柔軟的 (P)"
+                              value={latestTestResult.scores.P || 50}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
