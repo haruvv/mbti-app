@@ -273,14 +273,6 @@ export default async function UserProfilePage({
                 <div className="sm:ml-6 flex-1 text-center sm:text-left">
                   <h1 className="text-2xl font-bold flex flex-wrap items-center justify-center sm:justify-start">
                     {displayName}
-                    {/* 名前横のMBTIバッジ表示を変更（より大きく表示） */}
-                    {mbtiType && (
-                      <span
-                        className={`ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${typeColor.from} ${typeColor.to} text-white`}
-                      >
-                        {mbtiType}
-                      </span>
-                    )}
                   </h1>
                   <p className="text-gray-500 flex items-center mt-1 justify-center sm:justify-start">
                     <AtSign size={16} className="mr-1" />
@@ -293,7 +285,7 @@ export default async function UserProfilePage({
                   {loggedInUserId ? (
                     isOwnProfile ? (
                       <Link href="/profile/edit">
-                        <Button className="w-full sm:w-auto gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+                        <Button className="w-full sm:w-auto gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 border border-gray-300">
                           <Edit2 className="h-4 w-4" />
                           プロフィール編集
                         </Button>
@@ -311,31 +303,6 @@ export default async function UserProfilePage({
                   )}
                 </div>
               </div>
-
-              {/* MBTIタイプのサマリーカード - 新しく追加 */}
-              {mbtiType && typeDescription && (
-                <div
-                  className={`mb-6 bg-${typeColor.text.replace("text-", "")}/10 p-4 rounded-lg border border-${typeColor.text.replace("text-", "")}/20`}
-                >
-                  <div className="flex items-center">
-                    <div
-                      className={`bg-gradient-to-r ${typeColor.from} ${typeColor.to} text-white font-bold text-2xl p-3 rounded-lg shadow-sm`}
-                    >
-                      {mbtiType}
-                    </div>
-                    <div className="ml-4">
-                      <h3 className={`font-bold ${typeColor.text}`}>
-                        {typeDescription.name}
-                      </h3>
-                      <p
-                        className={`${typeColor.text.replace("900", "700").replace("800", "600")} text-sm`}
-                      >
-                        {typeDescription.description.split(".")[0]}.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* フォロー情報 */}
               <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
@@ -447,16 +414,16 @@ export default async function UserProfilePage({
               {/* MBTIタイプ情報 */}
               {mbtiType && typeDescription && (
                 <Card>
-                  <CardHeader
-                    className={`bg-${typeColor.text.replace("text-", "")}/10`}
-                  >
-                    <CardTitle className="text-lg flex items-center">
+                  <CardHeader className="bg-white">
+                    <CardTitle
+                      className={`text-lg flex items-center ${mbtiType ? mbtiColors[mbtiType].text : "text-indigo-800"}`}
+                    >
                       <BadgeCheck
                         className={`mr-2 h-5 w-5 ${typeColor.text}`}
                       />
                       <span className="flex items-center">
                         <span
-                          className={`${getTypeGradientClass(mbtiType)} text-white font-bold px-2 py-0.5 rounded mr-2`}
+                          className={`${mbtiType ? `bg-gradient-to-r ${mbtiColors[mbtiType].from} ${mbtiColors[mbtiType].to}` : "bg-gradient-to-r from-indigo-600 to-purple-600"} text-white font-bold px-2 py-0.5 rounded mr-2`}
                         >
                           {mbtiType}
                         </span>
