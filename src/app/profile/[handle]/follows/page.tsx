@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { FollowButton } from "@/components/features/follows/FollowButton";
-import { Tabs } from "@/components/ui/tabs";
+import { LinkTabs } from "@/components/ui/tabs";
 
 export default async function UserFollowsPage({
   params,
@@ -122,9 +122,10 @@ export default async function UserFollowsPage({
                 </h1>
               </div>
 
-              <Tabs
+              <LinkTabs
                 tabs={tabs}
-                activeTabClass="border-b-2 border-teal-700 text-teal-800"
+                className="border-b border-gray-200"
+                activeTabClassName="border-b-2 border-teal-700 text-teal-800"
               />
 
               <div className="mt-6">

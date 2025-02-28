@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
@@ -51,5 +52,39 @@ const TabsContent = React.forwardRef<
   />
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
+
+interface TabsProps {
+  tabs: {
+    id: string;
+    label: string;
+    href: string;
+    isActive: boolean;
+  }[];
+  activeTabClassName?: string;
+  className?: string;
+}
+
+export function LinkTabs({ tabs, activeTabClassName, className }: TabsProps) {
+  return (
+    <div
+      className={`flex space-x-1 border-b border-gray-200 ${className || ""}`}
+    >
+      {tabs.map((tab) => (
+        <Link
+          key={tab.id}
+          href={tab.href}
+          className={`px-4 py-2 text-sm font-medium transition-colors 
+            ${
+              tab.isActive
+                ? `text-teal-800 border-b-2 border-teal-600 -mb-px ${activeTabClassName || ""}`
+                : "text-gray-600 hover:text-teal-700 hover:bg-gray-50"
+            }`}
+        >
+          {tab.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };
