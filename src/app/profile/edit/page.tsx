@@ -135,28 +135,6 @@ export default function ProfileEditPage() {
     setFormData((prev) => ({ ...prev, mbtiType: e.target.value }));
   };
 
-  // お気に入りタイプ選択ハンドラー
-  const toggleFavoriteType = (typeId: string) => {
-    setFormData((prev) => {
-      const types = [...prev.favoriteTypes];
-      if (types.includes(typeId)) {
-        return {
-          ...prev,
-          favoriteTypes: types.filter((id) => id !== typeId),
-        };
-      } else {
-        if (types.length >= 5) {
-          toast.error("お気に入りは最大5つまで登録できます");
-          return prev;
-        }
-        return {
-          ...prev,
-          favoriteTypes: [...types, typeId],
-        };
-      }
-    });
-  };
-
   // ソーシャルリンク変更ハンドラー
   const handleSocialLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -625,13 +603,29 @@ export default function ProfileEditPage() {
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {mbtiTypes.map((type) => (
-                    <label key={type} className="flex items-center">
+                    <label
+                      key={type}
+                      className={`flex items-center ${
+                        !formData.favoriteTypes.includes(type) &&
+                        formData.favoriteTypes.length >= 5
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         className="mr-2"
                         checked={formData.favoriteTypes.includes(type)}
                         onChange={(e) => {
                           const checked = e.target.checked;
+
+                          // チェックを付ける場合（お気に入り追加）で、既に5つ選択されている場合はブロック
+                          if (checked && formData.favoriteTypes.length >= 5) {
+                            toast.error("お気に入りは最大5つまで登録できます");
+                            return;
+                          }
+
+                          // 通常の追加/削除処理
                           setFormData((prev) => ({
                             ...prev,
                             favoriteTypes: checked
@@ -639,11 +633,18 @@ export default function ProfileEditPage() {
                               : prev.favoriteTypes.filter((t) => t !== type),
                           }));
                         }}
+                        disabled={
+                          !formData.favoriteTypes.includes(type) &&
+                          formData.favoriteTypes.length >= 5
+                        }
                       />
                       <span>{type}</span>
                     </label>
                   ))}
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.favoriteTypes.length}/5 選択中
+                </p>
               </div>
 
               {/* エラーメッセージ */}
