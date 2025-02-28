@@ -26,7 +26,7 @@ export default function TermsPage() {
   return (
     <PageContainer maxWidth="3xl">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+        <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-gray-600">
           利用規約
         </h1>
         <p className="text-gray-600 max-w-xl mx-auto">
@@ -36,7 +36,7 @@ export default function TermsPage() {
 
       <div className="bg-indigo-50 p-4 rounded-lg mb-6 border border-indigo-100">
         <div className="flex items-start">
-          <Info className="h-5 w-5 text-indigo-600 mr-3 mt-0.5 flex-shrink-0" />
+          <Info className="h-5 w-5 text-slate-600 mr-3 mt-0.5 flex-shrink-0" />
           <p className="text-indigo-700 text-sm">
             本利用規約は、「MBTI診断アプリ」が提供するサービスのご利用条件を定めたものです。
             サービスをご利用いただくことで、本規約に同意いただいたものとみなします。
@@ -48,7 +48,7 @@ export default function TermsPage() {
         <div className="space-y-8">
           <section>
             <div className="flex items-center mb-2">
-              <BookOpen className="h-5 w-5 text-indigo-600 mr-2" />
+              <BookOpen className="h-5 w-5 text-slate-600 mr-2" />
               <h2 className="text-xl font-bold text-gray-800 m-0">
                 第1条（適用）
               </h2>

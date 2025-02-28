@@ -21,14 +21,12 @@ export default async function HomePage() {
     const userResult = await supabase
       .from("users")
       .select("*", { count: "exact", head: true });
-
     userCount = userResult.count || 0;
 
     // 最新の診断テスト数を取得
     const testResult = await supabase
       .from("test_results")
       .select("*", { count: "exact", head: true });
-
     testCount = testResult.count || 0;
   } catch (error) {
     console.error("Error fetching stats:", error);
@@ -43,11 +41,11 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         {/* ヒーローセクション */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-teal-500">
             あなたの性格タイプを発見しよう
           </h1>
           <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
@@ -56,13 +54,13 @@ export default async function HomePage() {
           <div className="flex flex-wrap justify-center gap-4">
             <a
               href="/test"
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-lg shadow-md hover:from-blue-700 hover:to-teal-600 transition-colors"
             >
               診断を始める
             </a>
             <a
               href="/types"
-              className="px-6 py-3 bg-white text-indigo-600 border border-indigo-200 rounded-lg shadow-sm hover:bg-indigo-50 transition-colors"
+              className="px-6 py-3 bg-white text-blue-700 border border-blue-300 rounded-lg shadow-sm hover:bg-blue-50 transition-colors"
             >
               タイプを見る
             </a>
@@ -71,11 +69,11 @@ export default async function HomePage() {
 
         {/* 特徴セクション */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {/* 特徴1 */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+          {/* 特徴1: 正確な診断（パープルアクセント） */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-200 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mb-4">
               <svg
-                className="w-6 h-6 text-indigo-600"
+                className="w-6 h-6 text-purple-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -95,11 +93,11 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {/* 特徴2 */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+          {/* 特徴2: コミュニティ（ティールアクセント） */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-teal-200 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center mb-4">
               <svg
-                className="w-6 h-6 text-purple-600"
+                className="w-6 h-6 text-teal-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -119,11 +117,11 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {/* 特徴3 */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+          {/* 特徴3: 洞察に満ちた分析（アンバーアクセント） */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-amber-200 hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mb-4">
               <svg
-                className="w-6 h-6 text-indigo-600"
+                className="w-6 h-6 text-amber-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -144,39 +142,48 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* MBTIの説明 */}
-        <div className="mb-16 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        {/* MBTIの説明セクション */}
+        <div className="mb-16 bg-white rounded-xl shadow-sm p-6 border border-blue-100">
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-4">MBTIとは？</h2>
+              <h2 className="text-2xl font-bold mb-4 text-blue-700">
+                MBTIとは？
+              </h2>
               <p className="text-gray-700 mb-4">
-                MBTIは「マイヤーズ・ブリッグスタイプ指標」の略で、カール・ユングの心理学理論に基づいて作られた性格診断ツールです。
-                4つの指標から、あなたの思考・行動パターンを16タイプに分類します。
+                MBTIは「マイヤーズ・ブリッグスタイプ指標」の略で、カール・ユングの心理学理論に基づいて作られた性格診断ツールです。4つの指標から、あなたの思考・行動パターンを16タイプに分類します。
               </p>
               <ul className="space-y-3 mb-6">
-                <li className="flex items-center">
-                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                <li className="flex items-center p-3 bg-gradient-to-r from-slate-50 to-gray-50 rounded-lg">
+                  <span className="w-8 h-8 mr-3 flex-shrink-0 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
                     E/I
                   </span>
-                  <span>外向型(Extraversion)／内向型(Introversion)</span>
+                  <span className="text-sm">
+                    外向型(Extraversion)／内向型(Introversion)
+                  </span>
                 </li>
-                <li className="flex items-center">
-                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                <li className="flex items-center p-3 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg">
+                  <span className="w-8 h-8 mr-3 flex-shrink-0 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
                     S/N
                   </span>
-                  <span>感覚型(Sensing)／直感型(iNtuition)</span>
+                  <span className="text-sm">
+                    感覚型(Sensing)／直感型(iNtuition)
+                  </span>
                 </li>
-                <li className="flex items-center">
-                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
+                <li className="flex items-center p-3 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg">
+                  <span className="w-8 h-8 mr-3 flex-shrink-0 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 font-bold">
                     T/F
                   </span>
-                  <span>思考型(Thinking)／感情型(Feeling)</span>
+                  <span className="text-sm">
+                    思考型(Thinking)／感情型(Feeling)
+                  </span>
                 </li>
-                <li className="flex items-center">
-                  <span className="w-8 h-8 mr-2 flex-shrink-0 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
+                <li className="flex items-center p-3 bg-gradient-to-r from-purple-50 to-fuchsia-50 rounded-lg">
+                  <span className="w-8 h-8 mr-3 flex-shrink-0 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
                     J/P
                   </span>
-                  <span>判断型(Judging)／知覚型(Perceiving)</span>
+                  <span className="text-sm">
+                    判断型(Judging)／知覚型(Perceiving)
+                  </span>
                 </li>
               </ul>
             </div>
@@ -191,7 +198,7 @@ export default async function HomePage() {
               <div className="mt-4">
                 <a
                   href="/test"
-                  className="inline-flex items-center text-indigo-600 hover:text-indigo-800"
+                  className="inline-flex items-center text-blue-700 hover:text-blue-900 transition-colors"
                 >
                   今すぐ診断する
                   <svg
@@ -215,7 +222,7 @@ export default async function HomePage() {
         </div>
 
         {/* CTAセクション */}
-        <div className="text-center py-8 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-md">
+        <div className="text-center py-8 px-6 bg-gradient-to-r from-blue-600 to-teal-500 rounded-xl shadow-md">
           <h2 className="text-2xl font-bold text-white mb-4">
             自分自身を理解する旅に出よう
           </h2>
@@ -224,17 +231,18 @@ export default async function HomePage() {
           </p>
           <a
             href="/test"
-            className="inline-block px-6 py-3 bg-white text-indigo-700 rounded-lg shadow hover:bg-gray-100 transition-colors"
+            className="inline-block px-6 py-3 bg-white text-blue-600 rounded-lg shadow hover:bg-gray-100 transition-colors"
           >
             無料診断を始める
           </a>
         </div>
       </div>
+      {/* <DebugPanel data={debugData} /> */}
     </div>
   );
 }
 
-// 特徴カードコンポーネント
+// 特徴カードコンポーネント（必要に応じて利用）
 function FeatureCard({
   icon,
   title,
@@ -253,7 +261,7 @@ function FeatureCard({
   );
 }
 
-// タイプカードコンポーネント
+// タイプカードコンポーネント（必要に応じて利用）
 function MbtiTypeCard({ code, name }: { code: string; name: string }) {
   return (
     <Link

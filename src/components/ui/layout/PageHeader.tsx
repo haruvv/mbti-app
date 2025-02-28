@@ -26,11 +26,11 @@ export function PageHeader({
       className="text-center mb-8"
     >
       {Icon && (
-        <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <Icon className="h-7 w-7 text-white" />
         </div>
       )}
-      <h1 className="text-3xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+      <h1 className="text-3xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-blue-600">
         {title}
       </h1>
       {subtitle && (
@@ -39,7 +39,7 @@ export function PageHeader({
         </p>
       )}
       {tip && (
-        <p className="text-sm text-indigo-600 text-center font-medium">{tip}</p>
+        <p className="text-sm text-teal-600 text-center font-medium">{tip}</p>
       )}
     </motion.div>
   );

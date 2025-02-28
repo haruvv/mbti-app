@@ -26,7 +26,7 @@ export default function TypesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 animate-gradient-x">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50 p-4 animate-gradient-x">
       <div className="container mx-auto max-w-6xl pt-8 pb-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">MBTIタイプ一覧</h1>

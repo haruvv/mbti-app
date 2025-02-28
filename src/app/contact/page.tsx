@@ -243,7 +243,7 @@ export default function ContactPage() {
                 </Link>
                 <Button
                   type="submit"
-                  className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  className="gap-2 bg-gradient-to-r from-slate-700 to-gray-600 hover:from-slate-800 hover:to-gray-700"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "送信中..." : "送信する"}

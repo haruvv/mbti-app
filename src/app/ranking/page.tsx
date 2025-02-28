@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { typeDescriptions } from "../data/mbtiTypes";
-import { TypeCard } from "@/components/features/mbti/TypeCard";
 import { PieChart, BarChart3, Users, Award, LineChart } from "lucide-react";
 
 type MbtiRanking = {
@@ -38,18 +37,15 @@ export default async function RankingPage() {
     }
   });
 
-  // タイプごとの診断回数を取得（修正版 - RPC関数を使用）
+  // タイプごとの診断回数を取得
   const { data: testStats, error: testError } = await supabase.rpc(
     "get_mbti_test_counts"
   );
 
-  // RPCが利用できない場合のフォールバック
   let testCountMap: Record<string, number> = {};
 
   if (testError || !testStats) {
     console.error("Error fetching test counts:", testError);
-
-    // 代替アプローチ：単純にすべての結果を取得して集計
     const { data: allTests } = await supabase
       .from("test_results")
       .select("mbti_type");
@@ -61,7 +57,6 @@ export default async function RankingPage() {
       });
     }
   } else {
-    // RPC関数が成功した場合
     testStats.forEach((stat: { mbti_type: string; count: number }) => {
       testCountMap[stat.mbti_type] = stat.count;
     });
@@ -73,52 +68,59 @@ export default async function RankingPage() {
     0
   );
 
+  // MBTIタイプを設定しているユーザー数
+  const usersWithMbti = Object.values(mbtiCountMap).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+
   // ランキングデータを作成
   const ranking: MbtiRanking[] = Object.entries(mbtiCountMap)
     .map(([mbti_type, count]) => ({
       mbti_type,
       count,
-      percentage: totalUserCount
-        ? Math.round((count / totalUserCount) * 1000) / 10
+      percentage: usersWithMbti
+        ? Math.round((count / usersWithMbti) * 1000) / 10
         : 0,
-      rank: 0, // 後で設定
+      rank: 0,
     }))
     .sort((a, b) => b.count - a.count);
 
-  // ランク付け
   ranking.forEach((item, index) => {
     item.rank = index + 1;
   });
 
-  // MBTIタイプを設定しているユーザー数
-  const usersWithMbti = ranking.reduce((sum, item) => sum + item.count, 0);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50">
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+        {/* タイトル */}
+        <h1 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-teal-500">
           MBTIタイプランキング
         </h1>
 
         {/* 統計情報 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm flex items-center">
-            <div className="p-3 bg-indigo-100 rounded-full mr-4">
-              <Users className="h-6 w-6 text-indigo-600" />
+          {/* 総ユーザー数（青） */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+              <Users className="h-6 w-6 text-blue-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">総ユーザー数</p>
-              <p className="text-2xl font-bold">{totalUserCount || 0}人</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {totalUserCount || 0}人
+              </p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm flex items-center">
-            <div className="p-3 bg-purple-100 rounded-full mr-4">
-              <Award className="h-6 w-6 text-purple-600" />
+          {/* MBTIタイプ設定済み（緑） */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-green-100 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-green-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+              <Award className="h-6 w-6 text-green-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">MBTIタイプ設定済み</p>
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold text-gray-800">
                 {usersWithMbti}人
                 <span className="text-sm font-normal text-gray-500 ml-1">
                   (
@@ -131,13 +133,14 @@ export default async function RankingPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm flex items-center">
-            <div className="p-3 bg-pink-100 rounded-full mr-4">
-              <PieChart className="h-6 w-6 text-pink-600" />
+          {/* 未設定ユーザー（オレンジ） */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+              <PieChart className="h-6 w-6 text-orange-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">未設定ユーザー</p>
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold text-gray-800">
                 {totalUserCount ? totalUserCount - usersWithMbti : 0}人
                 <span className="text-sm font-normal text-gray-500 ml-1">
                   (
@@ -153,21 +156,26 @@ export default async function RankingPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm flex items-center">
-            <div className="p-3 bg-blue-100 rounded-full mr-4">
-              <LineChart className="h-6 w-6 text-blue-600" />
+          {/* 診断テスト実行回数（ピンク） */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-pink-100 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-pink-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+              <LineChart className="h-6 w-6 text-pink-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">診断テスト実行回数</p>
-              <p className="text-2xl font-bold">{totalTestCount}回</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {totalTestCount}回
+              </p>
             </div>
           </div>
         </div>
 
         {/* ランキングテーブル */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
           <div className="p-6">
-            <h2 className="text-xl font-bold mb-6">人気MBTIタイプ</h2>
+            <h2 className="text-xl font-bold mb-6 text-gray-800">
+              人気MBTIタイプ
+            </h2>
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -188,25 +196,28 @@ export default async function RankingPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {ranking.map((item) => (
-                  <tr key={item.mbti_type} className="hover:bg-gray-50">
+                  <tr
+                    key={item.mbti_type}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center">
                         {item.rank <= 3 ? (
                           <span
                             className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold ${
                               item.rank === 1
-                                ? "bg-yellow-400"
+                                ? "bg-blue-600"
                                 : item.rank === 2
-                                  ? "bg-gray-400"
-                                  : "bg-amber-600"
+                                  ? "bg-green-500"
+                                  : "bg-orange-500"
                             }`}
                           >
                             {item.rank}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-medium">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-700 font-medium">
                             {item.rank}
                           </span>
                         )}
@@ -214,56 +225,55 @@ export default async function RankingPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center">
-                        <span className="font-medium">{item.mbti_type}</span>
+                        <span className="font-medium text-gray-800">
+                          {item.mbti_type}
+                        </span>
                         <span className="ml-2 text-sm text-gray-500">
                           {typeDescriptions[item.mbti_type]?.title || "-"}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-medium">{item.count}</td>
-                    <td className="px-4 py-3">{item.percentage}%</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {item.count}
+                    </td>
+                    <td className="px-4 py-3 text-gray-800">
+                      {item.percentage}%
+                    </td>
                     <td className="px-4 py-3">
                       <Link
                         href={`/types/${item.mbti_type.toLowerCase()}`}
-                        className="text-indigo-600 hover:text-indigo-800"
+                        className="text-blue-600 hover:text-blue-700 transition-colors"
                       >
                         詳細を見る
                       </Link>
                     </td>
                   </tr>
                 ))}
-                {ranking.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-4 py-8 text-center text-gray-500"
-                    >
-                      まだデータがありません
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* タイプ分布の可視化（簡易） */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-bold mb-6">MBTIタイプ分布</h2>
-
+        {/* タイプ分布の可視化 */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-xl font-bold mb-6 text-gray-800">
+            MBTIタイプ分布
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {ranking.map((item) => (
               <div
                 key={`bar-${item.mbti_type}`}
-                className="bg-gray-50 rounded-lg p-3 relative"
+                className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors"
               >
                 <div className="flex justify-between mb-1">
-                  <span className="font-medium">{item.mbti_type}</span>
+                  <span className="font-medium text-gray-800">
+                    {item.mbti_type}
+                  </span>
                   <span className="text-sm text-gray-500">{item.count}人</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
+                <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-indigo-600 h-4 rounded-full"
+                    className="bg-blue-600 h-2 rounded-full"
                     style={{
                       width: `${item.percentage > 0 ? Math.max(5, item.percentage) : 0}%`,
                     }}

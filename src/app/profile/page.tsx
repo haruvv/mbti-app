@@ -39,7 +39,7 @@ export default function ProfileRedirect() {
   // リダイレクト中のローディング表示
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <Loader2 className="w-8 h-8 animate-spin text-teal-700" />
     </div>
   );
 }

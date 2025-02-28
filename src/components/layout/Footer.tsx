@@ -3,12 +3,12 @@ import { Github, Twitter, Mail, Home } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="py-10 bg-gray-50 border-t">
+    <footer className="py-10 bg-white border-t border-gray-100">
       <div className="container px-4 mx-auto max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* サイト情報 */}
           <div className="md:col-span-1">
-            <h3 className="text-lg font-bold mb-3 bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">
+            <h3 className="text-lg font-bold mb-3 bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
               MBTI App
             </h3>
             <p className="text-gray-600 text-sm">
@@ -23,7 +23,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/"
-                  className="text-gray-600 hover:text-indigo-600 text-sm transition-colors"
+                  className="text-gray-600 hover:text-purple-600 text-sm transition-colors"
                 >
                   ホーム
                 </Link>
@@ -31,7 +31,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/test"
-                  className="text-gray-600 hover:text-indigo-600 text-sm transition-colors"
+                  className="text-gray-600 hover:text-purple-600 text-sm transition-colors"
                 >
                   診断テスト
                 </Link>
@@ -39,7 +39,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/types"
-                  className="text-gray-600 hover:text-indigo-600 text-sm transition-colors"
+                  className="text-gray-600 hover:text-purple-600 text-sm transition-colors"
                 >
                   タイプ一覧
                 </Link>
@@ -54,7 +54,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-gray-600 hover:text-indigo-600 text-sm transition-colors"
+                  className="text-gray-600 hover:text-purple-600 text-sm transition-colors"
                 >
                   サービスについて
                 </Link>
@@ -62,7 +62,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/privacy"
-                  className="text-gray-600 hover:text-indigo-600 text-sm transition-colors"
+                  className="text-gray-600 hover:text-purple-600 text-sm transition-colors"
                 >
                   プライバシーポリシー
                 </Link>
@@ -70,7 +70,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="text-gray-600 hover:text-indigo-600 text-sm transition-colors"
+                  className="text-gray-600 hover:text-purple-600 text-sm transition-colors"
                 >
                   利用規約
                 </Link>
@@ -82,25 +82,9 @@ export function Footer() {
           <div className="md:col-span-1">
             <h3 className="text-md font-bold mb-3 text-gray-800">フォロー</h3>
             <div className="flex space-x-4">
-              {/* <Link
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-900 transition-colors"
-              >
-                <Github size={20} />
-              </Link>
-              <Link
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-blue-400 transition-colors"
-              >
-                <Twitter size={20} />
-              </Link> */}
               <Link
                 href="mailto:mbtiapp3@gmail.com"
-                className="text-gray-500 hover:text-red-500 transition-colors"
+                className="text-gray-500 hover:text-purple-600 transition-colors"
               >
                 <Mail size={20} />
               </Link>
@@ -116,19 +100,19 @@ export function Footer() {
             <div className="flex space-x-4 text-gray-500 text-sm">
               <Link
                 href="/privacy"
-                className="hover:text-indigo-600 transition-colors"
+                className="hover:text-purple-600 transition-colors"
               >
                 プライバシー
               </Link>
               <Link
                 href="/terms"
-                className="hover:text-indigo-600 transition-colors"
+                className="hover:text-purple-600 transition-colors"
               >
                 利用規約
               </Link>
               <Link
                 href="/contact"
-                className="hover:text-indigo-600 transition-colors"
+                className="hover:text-purple-600 transition-colors"
               >
                 お問い合わせ
               </Link>

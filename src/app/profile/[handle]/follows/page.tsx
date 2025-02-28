@@ -111,91 +111,81 @@ export default async function UserFollowsPage({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Link
-                href={`/profile/${handle}`}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </Link>
-              <h1 className="text-xl font-bold">
-                @{handle}の{tab === "following" ? "フォロー" : "フォロワー"}
-              </h1>
-            </div>
+            <div className="max-w-3xl mx-auto">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                  @{handle}の{tab === "following" ? "フォロー" : "フォロワー"}
+                </h1>
+              </div>
 
-            <Tabs tabs={tabs} />
+              <Tabs
+                tabs={tabs}
+                activeTabClass="border-b-2 border-teal-700 text-teal-800"
+              />
 
-            <div className="mt-6">
-              {!followData || followData.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  {tab === "following"
-                    ? "まだ誰もフォローしていません"
-                    : "まだフォロワーがいません"}
-                </div>
-              ) : (
-                <ul className="divide-y divide-gray-200">
-                  {followData.map((followUser) => (
-                    <li
-                      key={followUser.id}
-                      className="py-4 flex items-center justify-between"
-                    >
-                      <Link
-                        href={`/profile/${followUser.handle}`}
-                        className="flex items-center gap-3"
+              <div className="mt-6">
+                {!followData || followData.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    {tab === "following"
+                      ? "まだ誰もフォローしていません"
+                      : "まだフォロワーがいません"}
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-200">
+                    {followData.map((followUser) => (
+                      <li
+                        key={followUser.id}
+                        className="py-4 flex items-center justify-between"
                       >
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                          <Image
-                            src={
-                              followUser.custom_image_url ||
-                              "/default-avatar.png"
-                            }
-                            alt={
-                              followUser.profile_display_name ||
-                              followUser.display_name ||
-                              followUser.handle
-                            }
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <p className="font-medium">
-                            {followUser.profile_display_name ||
-                              followUser.display_name ||
-                              `@${followUser.handle}`}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            @{followUser.handle}
-                          </p>
-                        </div>
-                      </Link>
+                        <Link
+                          href={`/profile/${followUser.handle}`}
+                          className="flex items-center gap-3"
+                        >
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                            <Image
+                              src={
+                                followUser.custom_image_url ||
+                                "/default-avatar.png"
+                              }
+                              alt={
+                                followUser.profile_display_name ||
+                                followUser.display_name ||
+                                followUser.handle
+                              }
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {followUser.profile_display_name ||
+                                followUser.display_name ||
+                                `@${followUser.handle}`}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              @{followUser.handle}
+                            </p>
+                          </div>
+                        </Link>
 
-                      {/* 自分自身でない場合のみフォローボタンを表示 */}
-                      {currentUserId && currentUserId !== followUser.id && (
-                        <FollowButton
-                          userId={followUser.id}
-                          initialIsFollowing={followUser.is_following || false}
-                        />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
+                        {/* 自分自身でない場合のみフォローボタンを表示 */}
+                        {currentUserId && currentUserId !== followUser.id && (
+                          <FollowButton
+                            userId={followUser.id}
+                            initialIsFollowing={
+                              followUser.is_following || false
+                            }
+                          />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
         </div>

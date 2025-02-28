@@ -82,7 +82,7 @@ export function TestForm() {
       <div className="mb-6">
         <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-out"
+            className="h-full bg-gradient-to-r from-teal-600 to-teal-700 transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -136,19 +136,19 @@ export function TestForm() {
                             answers[currentPage * questionsPerPage + index] ===
                             value
                               ? `
-                              ${value === 1 ? "bg-indigo-500" : ""}
-                              ${value === 2 ? "bg-indigo-400" : ""}
-                              ${value === 3 ? "bg-gray-400" : ""}
-                              ${value === 4 ? "bg-purple-400" : ""}
-                              ${value === 5 ? "bg-purple-500" : ""}
+                              ${value === 1 ? "bg-teal-800" : ""}
+                              ${value === 2 ? "bg-teal-700" : ""}
+                              ${value === 3 ? "bg-gray-500" : ""}
+                              ${value === 4 ? "bg-teal-600" : ""}
+                              ${value === 5 ? "bg-teal-500" : ""}
                               shadow-md transform scale-105
                             `
                               : `bg-gray-50 hover:bg-gray-100 border border-gray-200 
-                                ${value === 1 ? "hover:border-indigo-300" : ""}
-                                ${value === 2 ? "hover:border-indigo-200" : ""}
-                                ${value === 3 ? "hover:border-gray-300" : ""}
-                                ${value === 4 ? "hover:border-purple-200" : ""}
-                                ${value === 5 ? "hover:border-purple-300" : ""}
+                                ${value === 1 ? "hover:border-teal-700" : ""}
+                                ${value === 2 ? "hover:border-teal-600" : ""}
+                                ${value === 3 ? "hover:border-gray-400" : ""}
+                                ${value === 4 ? "hover:border-teal-500" : ""}
+                                ${value === 5 ? "hover:border-teal-400" : ""}
                               `
                           }
                         `}
@@ -197,7 +197,7 @@ export function TestForm() {
         </Button>
         <Button
           onClick={handleNext}
-          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-md"
+          className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white shadow-md"
         >
           {currentPage < totalPages - 1 ? (
             <>

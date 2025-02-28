@@ -28,33 +28,25 @@ export function MbtiTypeDisplay({
       </div>
 
       <div className="flex gap-3 mb-6">
-        <div
-          className={`text-center ${type.charAt(0) === "E" ? typeColor.bg : "bg-white/20"} rounded-lg p-3`}
-        >
+        <div className={`text-center typeColor.bg rounded-lg p-3`}>
           <div className="text-2xl font-bold">{type.charAt(0)}</div>
           <div className="text-xs mt-1">
             {type.charAt(0) === "I" ? "内向型" : "外向型"}
           </div>
         </div>
-        <div
-          className={`text-center ${type.charAt(1) === "N" ? typeColor.bg : "bg-white/20"} rounded-lg p-3`}
-        >
+        <div className={`text-center typeColor.bg rounded-lg p-3`}>
           <div className="text-2xl font-bold">{type.charAt(1)}</div>
           <div className="text-xs mt-1">
             {type.charAt(1) === "S" ? "現実的" : "直感的"}
           </div>
         </div>
-        <div
-          className={`text-center ${type.charAt(2) === "T" ? typeColor.bg : "bg-white/20"} rounded-lg p-3`}
-        >
+        <div className={`text-center typeColor.bg rounded-lg p-3`}>
           <div className="text-2xl font-bold">{type.charAt(2)}</div>
           <div className="text-xs mt-1">
             {type.charAt(2) === "T" ? "論理的" : "感情的"}
           </div>
         </div>
-        <div
-          className={`text-center ${type.charAt(3) === "J" ? typeColor.bg : "bg-white/20"} rounded-lg p-3`}
-        >
+        <div className={`text-center typeColor.bg rounded-lg p-3`}>
           <div className="text-2xl font-bold">{type.charAt(3)}</div>
           <div className="text-xs mt-1">
             {type.charAt(3) === "J" ? "計画的" : "柔軟的"}

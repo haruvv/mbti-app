@@ -192,9 +192,9 @@ export default async function UserProfilePage({
       mbtiType && mbtiColors[mbtiType]
         ? mbtiColors[mbtiType]
         : {
-            from: "from-indigo-500",
-            to: "to-purple-600",
-            text: "text-indigo-700",
+            from: "from-slate-700",
+            to: "to-gray-800",
+            text: "text-slate-700",
           };
 
     // ソーシャルリンクの処理
@@ -216,7 +216,7 @@ export default async function UserProfilePage({
     ];
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50">
         {/* DEBUG_MODEの場合のみデバッグパネルを表示 */}
         {DEBUG_MODE && userData && (
           <DebugPanel data={userData} sections={debugSections} />
@@ -227,7 +227,7 @@ export default async function UserProfilePage({
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
             {/* ヘッダー部分 */}
             <div
-              className={`h-32 ${mbtiType ? mbtiColors[mbtiType].bg : "bg-gradient-to-r from-indigo-500 to-purple-600"} relative`}
+              className={`h-32 ${mbtiType ? mbtiColors[mbtiType].bg : "bg-gradient-to-r from-slate-700 to-gray-800"} relative`}
             >
               {/* MBTIタイプを大きく表示 - ヘッダーに追加 */}
               {mbtiType && (
@@ -285,7 +285,7 @@ export default async function UserProfilePage({
                   {loggedInUserId ? (
                     isOwnProfile ? (
                       <Link href="/profile/edit">
-                        <Button className="w-full sm:w-auto gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 border border-gray-300">
+                        <Button className="w-full sm:w-auto gap-2 bg-slate-700 hover:bg-slate-800 text-white border border-slate-600">
                           <Edit2 className="h-4 w-4" />
                           プロフィール編集
                         </Button>
@@ -414,16 +414,16 @@ export default async function UserProfilePage({
               {/* MBTIタイプ情報 */}
               {mbtiType && typeDescription && (
                 <Card>
-                  <CardHeader className="bg-white">
+                  <CardHeader className="bg-white border-b border-gray-100">
                     <CardTitle
-                      className={`text-lg flex items-center ${mbtiType ? mbtiColors[mbtiType].text : "text-indigo-800"}`}
+                      className={`text-lg flex items-center ${mbtiType ? mbtiColors[mbtiType].text : "text-slate-700"}`}
                     >
                       <BadgeCheck
                         className={`mr-2 h-5 w-5 ${typeColor.text}`}
                       />
                       <span className="flex items-center">
                         <span
-                          className={`${mbtiType ? `bg-gradient-to-r ${mbtiColors[mbtiType].from} ${mbtiColors[mbtiType].to}` : "bg-gradient-to-r from-indigo-600 to-purple-600"} text-white font-bold px-2 py-0.5 rounded mr-2`}
+                          className={`${mbtiType ? `bg-gradient-to-r ${mbtiColors[mbtiType].from} ${mbtiColors[mbtiType].to}` : "bg-gradient-to-r from-slate-700 to-gray-800"} text-white font-bold px-2 py-0.5 rounded mr-2`}
                         >
                           {mbtiType}
                         </span>
@@ -433,7 +433,7 @@ export default async function UserProfilePage({
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm text-gray-700">
-                      <h3 className="font-medium mb-2 text-lg text-indigo-800">
+                      <h3 className="font-medium mb-2 text-lg text-slate-700">
                         {typeDescription.name}
                       </h3>
                       <p className="mb-4">{typeDescription.description}</p>
@@ -485,10 +485,10 @@ export default async function UserProfilePage({
                         {profile.bookmarked_types.map((type: string) => {
                           const typeKey = type as MBTITypeKey;
                           const typeColor = mbtiColors[typeKey] || {
-                            from: "from-indigo-500",
-                            to: "to-purple-600",
-                            text: "text-indigo-700",
-                            bg: "bg-indigo-100",
+                            from: "from-slate-700",
+                            to: "to-gray-800",
+                            text: "text-slate-700",
+                            bg: "bg-slate-100",
                           };
 
                           return (
@@ -526,7 +526,7 @@ export default async function UserProfilePage({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center">
-                    <BarChart className="mr-2 h-5 w-5 text-blue-500" />
+                    <BarChart className="mr-2 h-5 w-5 text-slate-600" />
                     診断結果
                   </CardTitle>
                 </CardHeader>
@@ -640,11 +640,11 @@ function TypeBar({
       </div>
       <div className="flex h-2.5 w-full rounded-full overflow-hidden">
         <div
-          className="bg-indigo-600 h-full"
+          className="bg-slate-600 h-full"
           style={{ width: `${100 - percentage}%` }}
         ></div>
         <div
-          className="bg-green-500 h-full"
+          className="bg-slate-400 h-full"
           style={{ width: `${percentage}%` }}
         ></div>
       </div>

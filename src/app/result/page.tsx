@@ -207,7 +207,7 @@ export default function ResultPage() {
         <TabsContent value="growth">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ContentCard>
-              <h3 className="text-xl font-semibold mb-4 flex items-center text-blue-800">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-teal-800">
                 <Lightbulb className="mr-2 h-5 w-5" />
                 成長のためのアドバイス
               </h3>
@@ -236,7 +236,7 @@ export default function ResultPage() {
             </ContentCard>
 
             <ContentCard>
-              <h3 className="text-xl font-semibold mb-4 flex items-center text-amber-800">
+              <h3 className="text-xl font-semibold mb-4 flex items-center text-teal-800">
                 <Award className="mr-2 h-5 w-5" />
                 潜在的な才能
               </h3>
@@ -245,56 +245,56 @@ export default function ResultPage() {
                   あなたのMBTIタイプは特定の才能や強みと関連していることがあります。
                   これらを認識し、活用することで、個人的および職業的な成長を促進できます。
                 </p>
-                <div className="bg-white/50 p-4 rounded-lg border border-amber-100">
-                  <div className="font-semibold mb-2 text-amber-700">
+                <div className="bg-white/50 p-4 rounded-lg border border-teal-100">
+                  <div className="font-semibold mb-2 text-teal-700">
                     注目すべき才能
                   </div>
                   <ul className="space-y-2">
                     {mbtiType.includes("I") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>深い集中力と思考力</span>
                       </li>
                     )}
                     {mbtiType.includes("E") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>人を惹きつけるコミュニケーション能力</span>
                       </li>
                     )}
                     {mbtiType.includes("N") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>創造的で革新的な思考</span>
                       </li>
                     )}
                     {mbtiType.includes("S") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>実用的で信頼性の高い問題解決</span>
                       </li>
                     )}
                     {mbtiType.includes("T") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>論理的分析と客観的判断</span>
                       </li>
                     )}
                     {mbtiType.includes("F") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>共感力と人間関係の構築</span>
                       </li>
                     )}
                     {mbtiType.includes("J") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>計画立案と組織化の能力</span>
                       </li>
                     )}
                     {mbtiType.includes("P") && (
                       <li className="flex items-start">
-                        <span className="text-amber-500 mr-2">•</span>
+                        <span className="text-teal-500 mr-2">•</span>
                         <span>適応力と柔軟性</span>
                       </li>
                     )}
@@ -308,6 +308,13 @@ export default function ResultPage() {
 
       {/* 関連情報セクション */}
       <RelatedContent />
+
+      <div className="mt-8 text-center">
+        <Button className="bg-teal-700 hover:bg-teal-800 text-white">
+          <Share2 className="h-4 w-4 mr-2" />
+          結果をシェアする
+        </Button>
+      </div>
     </PageContainer>
   );
 }

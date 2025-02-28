@@ -9,126 +9,126 @@ export interface MBTITypeColor {
   border: string; // ボーダー色
 }
 
-// MBTIタイプごとの色定義
+// MBTIタイプごとの色定義（落ち着いた色合いに調整）
 export const mbtiColors: Record<MBTITypeKey, MBTITypeColor> = {
-  // 分析家タイプ
+  // 分析家タイプ - 紫系（柔らかなパステルパープル）
   INTJ: {
-    from: "from-indigo-600",
-    to: "to-indigo-800",
-    text: "text-indigo-800",
-    bg: "bg-indigo-100",
-    border: "border-indigo-200",
+    from: "from-purple-300",
+    to: "to-purple-200",
+    text: "text-purple-800",
+    bg: "bg-purple-50",
+    border: "border-purple-100",
   },
   INTP: {
-    from: "from-blue-600",
-    to: "to-blue-800",
-    text: "text-blue-800",
-    bg: "bg-blue-100",
-    border: "border-blue-200",
+    from: "from-purple-400",
+    to: "to-purple-300",
+    text: "text-purple-800",
+    bg: "bg-purple-50",
+    border: "border-purple-100",
   },
   ENTJ: {
-    from: "from-indigo-600",
-    to: "to-indigo-800",
-    text: "text-indigo-800",
-    bg: "bg-indigo-100",
-    border: "border-indigo-200",
-  },
-  ENTP: {
-    from: "from-rose-600",
-    to: "to-rose-800",
-    text: "text-rose-800",
-    bg: "bg-rose-100",
-    border: "border-rose-200",
-  },
-
-  // 外交官タイプ
-  INFJ: {
-    from: "from-purple-600",
-    to: "to-purple-800",
-    text: "text-purple-800",
+    from: "from-purple-500",
+    to: "to-purple-400",
+    text: "text-purple-700",
     bg: "bg-purple-100",
     border: "border-purple-200",
   },
-  INFP: {
-    from: "from-violet-600",
-    to: "to-violet-800",
-    text: "text-violet-800",
-    bg: "bg-violet-100",
-    border: "border-violet-200",
-  },
-  ENFJ: {
-    from: "from-fuchsia-600",
-    to: "to-fuchsia-800",
-    text: "text-fuchsia-800",
-    bg: "bg-fuchsia-100",
-    border: "border-fuchsia-200",
-  },
-  ENFP: {
-    from: "from-pink-600",
-    to: "to-pink-800",
-    text: "text-pink-800",
-    bg: "bg-pink-100",
-    border: "border-pink-200",
+  ENTP: {
+    from: "from-purple-600",
+    to: "to-purple-500",
+    text: "text-purple-700",
+    bg: "bg-purple-100",
+    border: "border-purple-200",
   },
 
-  // 管理者タイプ
-  ISTJ: {
-    from: "from-black",
-    to: "to-gray-800",
-    text: "text-white",
-    bg: "bg-black",
-    border: "border-black",
-  },
-  ISFJ: {
-    from: "from-green-600",
-    to: "to-green-800",
+  // 外交官タイプ - 緑系（柔らかなパステルグリーン）
+  INFJ: {
+    from: "from-green-300",
+    to: "to-green-200",
     text: "text-green-800",
+    bg: "bg-green-50",
+    border: "border-green-100",
+  },
+  INFP: {
+    from: "from-green-400",
+    to: "to-green-300",
+    text: "text-green-800",
+    bg: "bg-green-50",
+    border: "border-green-100",
+  },
+  ENFJ: {
+    from: "from-green-500",
+    to: "to-green-400",
+    text: "text-green-700",
     bg: "bg-green-100",
     border: "border-green-200",
   },
-  ESTJ: {
-    from: "from-red-600",
-    to: "to-red-800",
-    text: "text-red-800",
-    bg: "bg-red-100",
-    border: "border-red-200",
-  },
-  ESFJ: {
-    from: "from-yellow-600",
-    to: "to-yellow-800",
-    text: "text-yellow-800",
-    bg: "bg-yellow-100",
-    border: "border-yellow-200",
+  ENFP: {
+    from: "from-green-600",
+    to: "to-green-500",
+    text: "text-green-700",
+    bg: "bg-green-100",
+    border: "border-green-200",
   },
 
-  // 探検家タイプ
+  // 管理者タイプ - 青系（柔らかなパステルブルー）
+  ISTJ: {
+    from: "from-blue-300",
+    to: "to-blue-200",
+    text: "text-blue-800",
+    bg: "bg-blue-50",
+    border: "border-blue-100",
+  },
+  ISFJ: {
+    from: "from-blue-400",
+    to: "to-blue-300",
+    text: "text-blue-800",
+    bg: "bg-blue-50",
+    border: "border-blue-100",
+  },
+  ESTJ: {
+    from: "from-blue-500",
+    to: "to-blue-400",
+    text: "text-blue-700",
+    bg: "bg-blue-100",
+    border: "border-blue-200",
+  },
+  ESFJ: {
+    from: "from-blue-600",
+    to: "to-blue-500",
+    text: "text-blue-700",
+    bg: "bg-blue-100",
+    border: "border-blue-200",
+  },
+
+  // 探検家タイプ - 黄色/オレンジ系（柔らかなパステルオレンジ＆イエロー）
   ISTP: {
-    from: "from-cyan-600",
-    to: "to-cyan-800",
-    text: "text-cyan-800",
-    bg: "bg-cyan-100",
-    border: "border-cyan-200",
+    from: "from-orange-300",
+    to: "to-orange-200",
+    text: "text-orange-800",
+    bg: "bg-orange-50",
+    border: "border-orange-100",
   },
   ISFP: {
-    from: "from-emerald-600",
-    to: "to-emerald-800",
-    text: "text-emerald-800",
-    bg: "bg-emerald-100",
-    border: "border-emerald-200",
+    from: "from-orange-400",
+    to: "to-orange-300",
+    text: "text-orange-800",
+    bg: "bg-orange-50",
+    border: "border-orange-100",
   },
   ESTP: {
-    from: "from-orange-600",
-    to: "to-orange-800",
-    text: "text-orange-800",
-    bg: "bg-orange-100",
-    border: "border-orange-200",
+    from: "from-yellow-300",
+    to: "to-yellow-200",
+    text: "text-yellow-800",
+    bg: "bg-yellow-50",
+    border: "border-yellow-100",
   },
   ESFP: {
-    from: "from-amber-600",
-    to: "to-amber-800",
-    text: "text-amber-800",
-    bg: "bg-amber-100",
-    border: "border-amber-200",
+    from: "from-yellow-400",
+    to: "to-yellow-300",
+    text: "text-yellow-800",
+    bg: "bg-yellow-50",
+    border: "border-yellow-100",
   },
 };
 

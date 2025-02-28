@@ -696,7 +696,7 @@ export default function ProfileEditPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center"
+                  className="flex items-center bg-teal-700 hover:bg-teal-800 text-white"
                 >
                   {isSubmitting && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

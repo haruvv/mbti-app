@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +17,7 @@ import {
   Users,
   LineChart,
   Clock,
+  Activity,
 } from "lucide-react";
 
 export default function TestPage() {
@@ -24,9 +25,44 @@ export default function TestPage() {
   const [answers, setAnswers] = useState<number[]>(
     Array(QUESTIONS.length).fill(3)
   );
+  const [stats, setStats] = useState({
+    userCount: "...",
+    testCount: "...",
+  });
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const questionsPerPage = 10;
   const totalPages = Math.ceil(QUESTIONS.length / questionsPerPage);
+
+  // 統計情報を取得
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/stats");
+
+        if (!response.ok) {
+          throw new Error("統計情報の取得に失敗しました");
+        }
+
+        const data = await response.json();
+        setStats({
+          userCount: data.formattedUserCount,
+          testCount: data.formattedTestCount,
+        });
+      } catch (error) {
+        console.error("統計情報取得エラー:", error);
+        setStats({
+          userCount: "1k+",
+          testCount: "5k+",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, []);
 
   // 現在のページの質問を取得
   const currentQuestions = QUESTIONS.slice(
@@ -73,10 +109,10 @@ export default function TestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 relative overflow-hidden">
       {/* 装飾的な背景要素 */}
-      <div className="absolute top-20 -right-20 w-96 h-96 bg-indigo-100 rounded-full opacity-30 blur-3xl"></div>
-      <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-100 rounded-full opacity-30 blur-3xl"></div>
+      <div className="absolute top-20 -right-20 w-96 h-96 bg-slate-100 rounded-full opacity-30 blur-3xl"></div>
+      <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-gray-100 rounded-full opacity-30 blur-3xl"></div>
 
       <div className="container mx-auto max-w-6xl px-4 py-16 relative z-10">
         {/* ヒーローセクション */}
@@ -86,7 +122,7 @@ export default function TestPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-slate-700 via-gray-600 to-slate-700">
             あなたの本当の性格を発見しよう
           </h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -163,7 +199,7 @@ export default function TestPage() {
             className="bg-white rounded-2xl shadow-xl overflow-hidden border border-purple-50 hover:shadow-2xl transition-all duration-300"
           >
             <div className="p-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:rotate-12 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:rotate-12 transition-transform duration-300">
                 <Info className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold mb-4 text-center">
@@ -175,8 +211,8 @@ export default function TestPage() {
               </p>
 
               <div className="space-y-3 mb-8">
-                <div className="flex items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                  <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3">
+                <div className="flex items-center p-3 bg-gradient-to-r from-slate-50 to-gray-50 rounded-lg">
+                  <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold mr-3">
                     E/I
                   </span>
                   <span className="text-sm">
@@ -232,8 +268,28 @@ export default function TestPage() {
                 <Users className="h-6 w-6 text-indigo-600" />
               </div>
               <h3 className="font-semibold mb-1">サイト利用者数</h3>
-              <p className="text-xl font-bold text-indigo-600">7,500+</p>
-              <p className="text-xs text-gray-500">MBTIを発見した人々</p>
+              <p className="text-xl font-bold text-indigo-600">
+                {isLoading ? (
+                  <span className="inline-block w-16 h-8 bg-indigo-50 animate-pulse rounded"></span>
+                ) : (
+                  stats.userCount
+                )}
+              </p>
+              <p className="text-xs text-gray-500">MBTI診断を利用した人々</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Activity className="h-6 w-6 text-teal-600" />
+              </div>
+              <h3 className="font-semibold mb-1">診断実施回数</h3>
+              <p className="text-xl font-bold text-teal-600">
+                {isLoading ? (
+                  <span className="inline-block w-16 h-8 bg-teal-50 animate-pulse rounded"></span>
+                ) : (
+                  stats.testCount
+                )}
+              </p>
+              <p className="text-xs text-gray-500">累計診断回数</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -241,15 +297,7 @@ export default function TestPage() {
               </div>
               <h3 className="font-semibold mb-1">診断精度</h3>
               <p className="text-xl font-bold text-purple-600">95%</p>
-              <p className="text-xs text-gray-500">高い一致率を誇る結果</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Brain className="h-6 w-6 text-pink-600" />
-              </div>
-              <h3 className="font-semibold mb-1">平均診断時間</h3>
-              <p className="text-xl font-bold text-pink-600">4分36秒</p>
-              <p className="text-xs text-gray-500">迅速に結果がわかります</p>
+              <p className="text-xs text-gray-500">信頼性の高い診断結果</p>
             </div>
           </div>
         </motion.div>

@@ -34,7 +34,7 @@ export default async function TestHistoryDetailPage({
         <div className="mb-6">
           <Link
             href="/profile"
-            className="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="inline-flex items-center text-teal-700 hover:text-teal-800 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             <span>診断履歴へ戻る</span>
@@ -57,7 +57,7 @@ export default async function TestHistoryDetailPage({
             <div className="mt-6 space-y-4">
               <Link
                 href="/test"
-                className="block text-center py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                className="block text-center py-2 px-4 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors"
               >
                 もう一度診断する
               </Link>
