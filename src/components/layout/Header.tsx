@@ -22,13 +22,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import UserSearch from "@/components/features/search/UserSearch";
-import { BarChart3, Home, User, Menu, X } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { BarChart3, Home, User, Menu, X, Star } from "lucide-react";
 
 // プロフィールタイプの定義
 type Profile = {
@@ -67,28 +61,12 @@ export default function Header() {
     return "U";
   };
 
-  // ナビゲーションリンクのリスト
-  const navLinks = [
-    {
-      href: "/",
-      label: "ホーム",
-      icon: <Home className="h-5 w-5" />,
-    },
-    {
-      href: "/test",
-      label: "診断テスト",
-      icon: <User className="h-5 w-5" />,
-    },
-    {
-      href: "/types",
-      label: "タイプ一覧",
-      icon: <User className="h-5 w-5" />,
-    },
-    {
-      href: "/ranking",
-      label: "ランキング",
-      icon: <BarChart3 className="h-5 w-5" />,
-    },
+  // ナビゲーションリンクを一致させる - アイコンも含める
+  const navigationLinks = [
+    { href: "/", label: "ホーム", icon: <Home size={18} /> },
+    { href: "/test", label: "診断する", icon: <BarChart3 size={18} /> },
+    { href: "/types", label: "タイプ一覧", icon: <User size={18} /> },
+    { href: "/ranking", label: "ランキング", icon: <Star size={18} /> },
   ];
 
   return (
@@ -107,12 +85,12 @@ export default function Header() {
         </div>
 
         {/* デスクトップナビゲーション（中画面以上） */}
-        <nav className="hidden md:flex items-center space-x-1">
-          {navLinks.map((link) => (
+        <nav className="hidden md:flex space-x-1">
+          {navigationLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
             >
               {link.label}
             </Link>
@@ -174,51 +152,20 @@ export default function Header() {
             </Link>
           </SignedIn>
 
-          {/* モバイルメニューボタン - DropdownMenuを使用 */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden ml-2"
-                aria-label="メニュー"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {navLinks.map((link) => (
-                <DropdownMenuItem key={link.href} asChild>
-                  <Link
-                    href={link.href}
-                    className="flex items-center p-2 cursor-pointer w-full"
-                  >
-                    <span className="mr-3 text-indigo-600">{link.icon}</span>
-                    {link.label}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-
-              <SignedOut>
-                <div className="border-t mt-2 pt-2">
-                  <DropdownMenuItem asChild>
-                    <SignInButton>
-                      <Button variant="outline" className="w-full mt-2">
-                        ログイン
-                      </Button>
-                    </SignInButton>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <SignUpButton>
-                      <Button className="w-full mt-2 bg-gradient-to-r from-indigo-600 to-blue-500">
-                        アカウント登録
-                      </Button>
-                    </SignUpButton>
-                  </DropdownMenuItem>
-                </div>
-              </SignedOut>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* シンプルなモバイルメニューボタン */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden ml-2"
+            aria-label="メニュー"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
         </div>
       </div>
 
@@ -226,6 +173,39 @@ export default function Header() {
       <div className="md:hidden px-4 pb-3">
         <UserSearch />
       </div>
+
+      {/* モバイルメニュー */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-100">
+          <nav className="bg-white py-2">
+            {navigationLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex items-center px-4 py-3 hover:bg-indigo-50 text-gray-700"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <span className="mr-3 text-indigo-600">{link.icon}</span>
+                {link.label}
+              </Link>
+            ))}
+            <SignedOut>
+              <div className="border-t border-gray-100 mt-2 pt-2 px-4 space-y-2">
+                <SignInButton>
+                  <Button variant="outline" className="w-full">
+                    ログイン
+                  </Button>
+                </SignInButton>
+                <SignUpButton>
+                  <Button className="w-full bg-gradient-to-r from-indigo-600 to-blue-500">
+                    アカウント登録
+                  </Button>
+                </SignUpButton>
+              </div>
+            </SignedOut>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

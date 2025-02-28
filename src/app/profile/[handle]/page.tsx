@@ -24,9 +24,21 @@ import {
 } from "lucide-react";
 import { DebugPanel } from "@/components/debug/DebugPanel";
 import { Button } from "@/components/ui/button";
+import { mbtiColors, getTypeGradientClass } from "@/app/data/mbtiColors";
 
 // 最上部でデバッグ管理用の定数を追加
 const DEBUG_MODE = process.env.NODE_ENV === "development";
+
+// MBTIキーの型定義を追加
+type MBTITypeKey = keyof typeof typeDescriptions;
+
+// MBTIの説明の型定義
+interface MBTITypeDescription {
+  name: string;
+  description: string;
+  strengths: string[];
+  weaknesses: string[];
+}
 
 export default async function UserProfilePage({
   params,
@@ -101,6 +113,11 @@ export default async function UserProfilePage({
       userData = userFromUsersTable;
     }
 
+    // null チェックを追加
+    if (!userData) {
+      return notFound();
+    }
+
     // 現在のユーザーIDを取得
     let loggedInUserId = null; // ログイン中のユーザーのSupabaseID
     let isFollowing = false; // ログイン中のユーザーがこのプロフィールのユーザーをフォローしているか
@@ -159,11 +176,26 @@ export default async function UserProfilePage({
     const latestTestResult = testResults?.[0];
 
     // 表示データを準備
-    const profile = userData.user_profiles || userData;
+    const profile =
+      "user_profiles" in userData
+        ? userData.user_profiles[0] || userData
+        : userData;
     const displayName = profile.display_name || `@${userData.handle}`;
-    const mbtiType = profile.preferred_mbti;
-    const typeDescription = mbtiType ? typeDescriptions[mbtiType] : null;
+    const mbtiType = profile.preferred_mbti as MBTITypeKey | null;
+    const typeDescription = mbtiType
+      ? (typeDescriptions[mbtiType] as MBTITypeDescription)
+      : null;
     const joinDate = userData.created_at || profile.created_at;
+
+    // MBTIタイプに基づいた色を設定（ない場合はデフォルト色）
+    const typeColor =
+      mbtiType && mbtiColors[mbtiType]
+        ? mbtiColors[mbtiType]
+        : {
+            from: "from-indigo-500",
+            to: "to-purple-600",
+            text: "text-indigo-700",
+          };
 
     // ソーシャルリンクの処理
     const socialLinks = profile.social_links || {};
@@ -186,13 +218,28 @@ export default async function UserProfilePage({
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         {/* DEBUG_MODEの場合のみデバッグパネルを表示 */}
-        {DEBUG_MODE && <DebugPanel data={userData} sections={debugSections} />}
+        {DEBUG_MODE && userData && (
+          <DebugPanel data={userData} sections={debugSections} />
+        )}
 
         <div className="container mx-auto max-w-4xl px-4 py-8">
           {/* プロフィールカード */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
             {/* ヘッダー部分 */}
-            <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600 relative"></div>
+            <div
+              className={`h-32 ${mbtiType ? mbtiColors[mbtiType].bg : "bg-gradient-to-r from-indigo-500 to-purple-600"} relative`}
+            >
+              {/* MBTIタイプを大きく表示 - ヘッダーに追加 */}
+              {mbtiType && (
+                <div className="absolute bottom-4 right-6">
+                  <div
+                    className={`${mbtiType === "ISTJ" ? "bg-white text-black" : "bg-white/90 backdrop-blur " + mbtiColors[mbtiType].text} font-bold px-4 py-2 rounded-full shadow-sm text-xl border-2 border-white`}
+                  >
+                    {mbtiType}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="px-6 pb-6">
               {/* アバターとプロフィールヘッダー情報 */}
@@ -211,14 +258,26 @@ export default async function UserProfilePage({
                       className="object-cover w-full h-full"
                     />
                   </div>
+
+                  {/* MBTIタイプのバッジをアバター上に配置 */}
+                  {mbtiType && (
+                    <div
+                      className={`absolute -bottom-2 -right-2 ${mbtiColors[mbtiType].bg} ${mbtiType === "ISTJ" ? "text-white" : mbtiColors[mbtiType].text.replace("text-", "text-")} font-bold px-2 py-1 rounded-full text-sm shadow-md border-2 border-white`}
+                    >
+                      {mbtiType}
+                    </div>
+                  )}
                 </div>
 
                 {/* プロフィール基本情報 */}
                 <div className="sm:ml-6 flex-1 text-center sm:text-left">
                   <h1 className="text-2xl font-bold flex flex-wrap items-center justify-center sm:justify-start">
                     {displayName}
+                    {/* 名前横のMBTIバッジ表示を変更（より大きく表示） */}
                     {mbtiType && (
-                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                      <span
+                        className={`ml-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${typeColor.from} ${typeColor.to} text-white`}
+                      >
                         {mbtiType}
                       </span>
                     )}
@@ -252,6 +311,31 @@ export default async function UserProfilePage({
                   )}
                 </div>
               </div>
+
+              {/* MBTIタイプのサマリーカード - 新しく追加 */}
+              {mbtiType && typeDescription && (
+                <div
+                  className={`mb-6 bg-${typeColor.text.replace("text-", "")}/10 p-4 rounded-lg border border-${typeColor.text.replace("text-", "")}/20`}
+                >
+                  <div className="flex items-center">
+                    <div
+                      className={`bg-gradient-to-r ${typeColor.from} ${typeColor.to} text-white font-bold text-2xl p-3 rounded-lg shadow-sm`}
+                    >
+                      {mbtiType}
+                    </div>
+                    <div className="ml-4">
+                      <h3 className={`font-bold ${typeColor.text}`}>
+                        {typeDescription.name}
+                      </h3>
+                      <p
+                        className={`${typeColor.text.replace("900", "700").replace("800", "600")} text-sm`}
+                      >
+                        {typeDescription.description.split(".")[0]}.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* フォロー情報 */}
               <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
@@ -363,15 +447,26 @@ export default async function UserProfilePage({
               {/* MBTIタイプ情報 */}
               {mbtiType && typeDescription && (
                 <Card>
-                  <CardHeader>
+                  <CardHeader
+                    className={`bg-${typeColor.text.replace("text-", "")}/10`}
+                  >
                     <CardTitle className="text-lg flex items-center">
-                      <BadgeCheck className="mr-2 h-5 w-5 text-indigo-500" />
-                      {mbtiType}タイプ情報
+                      <BadgeCheck
+                        className={`mr-2 h-5 w-5 ${typeColor.text}`}
+                      />
+                      <span className="flex items-center">
+                        <span
+                          className={`${getTypeGradientClass(mbtiType)} text-white font-bold px-2 py-0.5 rounded mr-2`}
+                        >
+                          {mbtiType}
+                        </span>
+                        タイプ情報
+                      </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm text-gray-700">
-                      <h3 className="font-medium mb-2">
+                      <h3 className="font-medium mb-2 text-lg text-indigo-800">
                         {typeDescription.name}
                       </h3>
                       <p className="mb-4">{typeDescription.description}</p>
@@ -382,9 +477,11 @@ export default async function UserProfilePage({
                             強み
                           </h4>
                           <ul className="list-disc list-inside space-y-1">
-                            {typeDescription.strengths.map((strength, i) => (
-                              <li key={i}>{strength}</li>
-                            ))}
+                            {typeDescription.strengths.map(
+                              (strength: string, i: number) => (
+                                <li key={i}>{strength}</li>
+                              )
+                            )}
                           </ul>
                         </div>
 
@@ -393,9 +490,11 @@ export default async function UserProfilePage({
                             弱み
                           </h4>
                           <ul className="list-disc list-inside space-y-1">
-                            {typeDescription.weaknesses.map((weakness, i) => (
-                              <li key={i}>{weakness}</li>
-                            ))}
+                            {typeDescription.weaknesses.map(
+                              (weakness: string, i: number) => (
+                                <li key={i}>{weakness}</li>
+                              )
+                            )}
                           </ul>
                         </div>
                       </div>
@@ -416,19 +515,33 @@ export default async function UserProfilePage({
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {profile.bookmarked_types.map((type) => (
-                          <div
-                            key={type}
-                            className="text-center p-3 bg-gray-50 rounded-lg"
-                          >
-                            <div className="font-bold text-lg text-indigo-600">
-                              {type}
+                        {profile.bookmarked_types.map((type: string) => {
+                          const typeKey = type as MBTITypeKey;
+                          const typeColor = mbtiColors[typeKey] || {
+                            from: "from-indigo-500",
+                            to: "to-purple-600",
+                            text: "text-indigo-700",
+                            bg: "bg-indigo-100",
+                          };
+
+                          return (
+                            <div
+                              key={type}
+                              className={`text-center p-3 rounded-lg transition-colors ${typeColor.bg} hover:opacity-90`}
+                            >
+                              <div
+                                className={`font-bold text-lg ${typeKey === "ISTJ" ? "text-white" : typeColor.text}`}
+                              >
+                                {type}
+                              </div>
+                              <div
+                                className={`text-xs ${typeKey === "ISTJ" ? "text-gray-200" : typeColor.text.replace("800", "700")}`}
+                              >
+                                {typeDescriptions[typeKey]?.name || ""}
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {typeDescriptions[type]?.name || ""}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </CardContent>
                   </Card>
