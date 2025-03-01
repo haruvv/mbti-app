@@ -5,20 +5,6 @@ export default async function HomePage() {
   // クライアントの作成
   const supabase = createClient();
 
-  try {
-    // 最新の登録ユーザー数を取得
-    const { count: userTotal } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true });
-
-    // 最新の診断テスト数を取得
-    const { count: testTotal } = await supabase
-      .from("test_results")
-      .select("*", { count: "exact", head: true });
-  } catch (error) {
-    console.error("Error fetching stats:", error);
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-16 max-w-4xl">
