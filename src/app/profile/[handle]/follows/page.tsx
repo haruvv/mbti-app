@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { FollowButton } from "@/components/features/follows/FollowButton";
-import { LinkTabs } from "@/components/ui/tabs";
+import { LinkTabs } from "@/components/ui/Tabs";
 
 export default async function UserFollowsPage({
   params,

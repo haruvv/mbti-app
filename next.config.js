@@ -19,7 +19,10 @@ const nextConfig = {
     domains: ["localhost", "your-supabase-project.supabase.co"],
   },
   experimental: {
-    serverActions: true,
+    serverActions: {
+      // オプションを指定する
+      allowedOrigins: ["*"], // 例: 許可するオリジンを指定
+    },
   },
 };
 

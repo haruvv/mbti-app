@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { FollowButton } from "@/components/features/follows/FollowButton";
 import { FollowStats } from "@/components/features/follows/FollowStats";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormattedDate } from "@/components/ui/FormattedDate";
 import {
