@@ -24,7 +24,7 @@ import { PageContainer } from "@/components/ui/layout/PageContainer";
 import { PageHeader } from "@/components/ui/layout/PageHeader";
 import { ContentCard } from "@/components/ui/layout/ContentCard";
 import { motion } from "framer-motion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { mbtiColors } from "@/app/data/mbtiColors";
 import { getTypeDescription, getCareerOptions } from "@/app/_utils/mbtiResult";
 import { MbtiTypeDisplay } from "@/components/features/mbti/MbtiTypeDisplay";
