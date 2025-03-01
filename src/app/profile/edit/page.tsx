@@ -131,7 +131,6 @@ export default function ProfileEditPage() {
   };
   // 画像選択ボタンクリック時のハンドラー
   const handleImageButtonClick = () => {
-    console.log("画像選択ボタンがクリックされました");
     // ファイル選択ダイアログを表示する
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -142,7 +141,6 @@ export default function ProfileEditPage() {
 
   // ファイル選択時のハンドラー
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("ファイルが選択されました");
     const files = e.target.files;
     if (!files || files.length === 0) return;
 

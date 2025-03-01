@@ -96,7 +96,6 @@ export default async function UserProfilePage({
         .single();
 
       if (!userFromUsersTable || userError) {
-        console.log(`ユーザー "${handle}" は見つかりませんでした`);
         return notFound();
       }
 

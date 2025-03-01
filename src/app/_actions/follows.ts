@@ -56,13 +56,6 @@ export async function toggleFollow(targetUserId: string): Promise<{
 
     if (error) {
       console.error("Toggle follow error:", error);
-
-      // デバッグ用の詳細なログ出力
-      console.log("Function params:", {
-        p_follower_id: userData.id,
-        p_following_id: targetUserId,
-      });
-
       return { success: false, error: "フォロー状態の更新に失敗しました" };
     }
 

@@ -72,9 +72,6 @@ export default async function UserFollowsPage({
     console.error("Follow data fetch error:", followError);
   }
 
-  // デバッグ用に結果を表示
-  console.log("Follow result:", followResult);
-
   if (followResult) {
     followData = followResult.users || [];
 

@@ -15,9 +15,6 @@ export default async function HomePage() {
     const { count: testTotal } = await supabase
       .from("test_results")
       .select("*", { count: "exact", head: true });
-
-    // ここでカウントを使う例（または変数を削除）
-    console.log(`ユーザー数: ${userTotal}、テスト数: ${testTotal}`);
   } catch (error) {
     console.error("Error fetching stats:", error);
   }

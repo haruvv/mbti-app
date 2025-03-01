@@ -34,7 +34,6 @@ export function FollowButton({
     setIsLoading(true);
     try {
       const result = await toggleFollow(userIdToUse);
-      console.log("Toggle follow result:", result);
 
       if (!result.success) {
         toast.error(result.error || "フォロー操作に失敗しました");
@@ -42,7 +41,7 @@ export function FollowButton({
       }
 
       const newFollowState = !isFollowing;
-      console.log("Setting follow state to:", newFollowState);
+
       setIsFollowing(newFollowState);
 
       router.refresh();

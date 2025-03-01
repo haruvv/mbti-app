@@ -43,7 +43,7 @@ export function TestForm() {
     } else {
       // 最終ページなら結果へ
       const mbtiType = calculateMBTIType(answers);
-      console.log("診断結果: ", mbtiType); // デバッグ用ログ
+
       if (mbtiType && mbtiType.length === 4) {
         router.push(`/result?type=${mbtiType.toUpperCase()}&from=test`);
       } else {

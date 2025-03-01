@@ -25,18 +25,12 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
     const storageKey = `mbti_result_${resultId}`;
     const alreadySaved = localStorage.getItem(storageKey);
 
-    console.log("ストレージキー:", storageKey);
-    console.log("新規テスト結果:", isNewResult);
-    console.log("保存済みフラグ:", alreadySaved);
-
     if (alreadySaved === "true") {
-      console.log("保存済みと判定");
       setIsSaved(true);
       return;
     }
 
     if (!isNewResult) {
-      console.log("新規テスト結果ではないため保存しない");
       return;
     }
 
@@ -68,9 +62,7 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
         formData.append("fScore", fScore.toString());
         formData.append("pScore", pScore.toString());
 
-        console.log("保存処理開始...");
         const result = await saveTestResult(formData);
-        console.log("保存結果:", result);
 
         if (result.error) {
           console.error("保存に失敗:", result.error);

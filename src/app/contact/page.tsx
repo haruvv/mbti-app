@@ -78,7 +78,6 @@ export default function ContactPage() {
         throw new Error(result.error || "エラーが発生しました");
       }
 
-      console.log("送信されたデータ:", data);
       setIsSubmitted(true);
     } catch (error) {
       console.error("送信エラー:", error);
