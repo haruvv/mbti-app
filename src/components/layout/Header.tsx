@@ -34,7 +34,6 @@ export default function Header() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { handle } = useUserContext();
-
   useEffect(() => {
     async function fetchProfile() {
       if (!user) return;

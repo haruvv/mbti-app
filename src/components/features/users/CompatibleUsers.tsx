@@ -1,10 +1,22 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/hooks/useUser";
+import Image from "next/image";
+
+// 互換性のあるユーザーの型定義
+type CompatibleUser = {
+  id: string;
+  custom_image_url: string | null;
+  display_name: string | null;
+  profile_display_name: string | null;
+  handle: string;
+  mbti_type: string;
+  bio: string | null;
+};
 
 export function CompatibleUsers() {
   const { user } = useUser();
-  const [compatibleUsers, setCompatibleUsers] = useState<any[]>([]);
+  const [compatibleUsers, setCompatibleUsers] = useState<CompatibleUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,11 +54,14 @@ export function CompatibleUsers() {
             <li key={user.id} className="border rounded-lg p-4">
               <div className="flex items-center gap-4">
                 {user.custom_image_url && (
-                  <img
-                    src={user.custom_image_url}
-                    alt="ユーザー画像"
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                  <div className="relative w-12 h-12">
+                    <Image
+                      src={user.custom_image_url}
+                      alt="ユーザー画像"
+                      fill
+                      className="rounded-full object-cover"
+                    />
+                  </div>
                 )}
                 <div>
                   <h3 className="font-bold">

@@ -233,7 +233,8 @@ export function ProfileForm({
 
                   try {
                     const { success, url, error } = await uploadImage(file);
-                    if (!success || !url) throw new Error(error);
+                    if (!success || !url)
+                      throw new Error(error || "アップロードに失敗しました");
 
                     setFormData((prev) => ({ ...prev, imageUrl: url }));
                     setChangedFields((prev) => new Set(prev).add("imageUrl"));

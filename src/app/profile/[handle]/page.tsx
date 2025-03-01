@@ -130,7 +130,6 @@ export default async function UserProfilePage({
         .select("id")
         .eq("clerk_id", clerkUserId)
         .single();
-
       if (loggedInUser) {
         loggedInUserId = loggedInUser.id;
         isOwnProfile =

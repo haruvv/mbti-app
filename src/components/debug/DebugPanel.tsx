@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 
 interface DebugPanelProps {
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   sections?: Array<{
     title: string;
-    data: any;
+    data: Record<string, unknown> | string | number | boolean | null;
   }>;
 }
 

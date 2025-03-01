@@ -1,38 +1,26 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { TypeCard } from "@/components/features/mbti/TypeCard";
 
 export default async function HomePage() {
   // クライアントの作成
   const supabase = createClient();
 
-  // サーバーサイドでデータを取得
-  let userCount = 0;
-  let testCount = 0;
-
   try {
     // 最新の登録ユーザー数を取得
-    const userResult = await supabase
+    const { count: userTotal } = await supabase
       .from("users")
       .select("*", { count: "exact", head: true });
-    userCount = userResult.count || 0;
 
     // 最新の診断テスト数を取得
-    const testResult = await supabase
+    const { count: testTotal } = await supabase
       .from("test_results")
       .select("*", { count: "exact", head: true });
-    testCount = testResult.count || 0;
+
+    // ここでカウントを使う例（または変数を削除）
+    console.log(`ユーザー数: ${userTotal}、テスト数: ${testTotal}`);
   } catch (error) {
     console.error("Error fetching stats:", error);
   }
-
-  // デバッグデータを準備
-  const debugData = {
-    stats: {
-      userCount,
-      testCount,
-    },
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -46,18 +34,18 @@ export default async function HomePage() {
             MBTIで自己理解を深め、あなたに合った人間関係やキャリアを見つけましょう
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <a
+            <Link
               href="/test"
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-lg shadow-md hover:from-blue-700 hover:to-teal-600 transition-colors"
             >
               診断を始める
-            </a>
-            <a
+            </Link>
+            <Link
               href="/types"
               className="px-6 py-3 bg-white text-blue-700 border border-blue-300 rounded-lg shadow-sm hover:bg-blue-50 transition-colors"
             >
               タイプを見る
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -190,7 +178,7 @@ export default async function HomePage() {
                 <li>相性の良いタイプとの比較</li>
               </ol>
               <div className="mt-4">
-                <a
+                <Link
                   href="/test"
                   className="inline-flex items-center text-blue-700 hover:text-blue-900 transition-colors"
                 >
@@ -209,7 +197,7 @@ export default async function HomePage() {
                       d="M14 5l7 7m0 0l-7 7m7-7H3"
                     />
                   </svg>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -223,46 +211,15 @@ export default async function HomePage() {
           <p className="text-white opacity-90 mb-6 max-w-xl mx-auto">
             5分の診断で、あなたの性格タイプを発見し、より良い人間関係や自己成長につなげましょう
           </p>
-          <a
+          <Link
             href="/test"
             className="inline-block px-6 py-3 bg-white text-blue-600 rounded-lg shadow hover:bg-gray-100 transition-colors"
           >
             無料診断を始める
-          </a>
+          </Link>
         </div>
       </div>
       {/* <DebugPanel data={debugData} /> */}
     </div>
-  );
-}
-
-// 特徴カードコンポーネント（必要に応じて利用）
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="p-6 border rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
-      <div className="mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </div>
-  );
-}
-
-// タイプカードコンポーネント（必要に応じて利用）
-function MbtiTypeCard({ code, name }: { code: string; name: string }) {
-  return (
-    <Link
-      href={`/types/${code.toLowerCase()}`}
-      className="group transition-transform hover:-translate-y-1"
-    >
-      <TypeCard type={code} title={name} />
-    </Link>
   );
 }

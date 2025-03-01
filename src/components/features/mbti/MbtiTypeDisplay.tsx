@@ -1,6 +1,5 @@
 import React from "react";
 import { MBTITypeKey } from "@/app/data/mbtiTypes";
-import { mbtiColors } from "@/app/data/mbtiColors";
 import { motion } from "framer-motion";
 
 interface MbtiTypeDisplayProps {

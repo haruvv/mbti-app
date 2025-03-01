@@ -4,6 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
+// ユーザー型を定義
+type User = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  // 他に必要なフィールドがあれば追加
+};
+
 // フォロー状態を切り替える
 export async function toggleFollow(targetUserId: string): Promise<{
   success: boolean;
@@ -172,7 +182,7 @@ export async function getUserFollows(
 ): Promise<{
   success: boolean;
   data?: {
-    users: any[];
+    users: User[];
     total_count: number;
   };
   error?: string;

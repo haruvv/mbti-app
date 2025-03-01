@@ -5,7 +5,7 @@ import { saveTestResult } from "../_actions/test";
 import type { MBTITypeKey } from "../data/mbtiTypes";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
 export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {

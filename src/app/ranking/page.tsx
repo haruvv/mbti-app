@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { typeDescriptions } from "../data/mbtiTypes";
+import { typeDescriptions } from "@/app/data/mbtiTypes";
 import { PieChart, Users, Award, LineChart } from "lucide-react";
 
 type MbtiRanking = {
@@ -30,7 +30,7 @@ export default async function RankingPage() {
 
   // MBTIタイプごとのカウントを集計
   const mbtiCountMap: Record<string, number> = {};
-  mbtiCounts?.forEach((user) => {
+  mbtiCounts?.forEach((user: { preferred_mbti: string | null }) => {
     const type = user.preferred_mbti as string;
     if (type) {
       mbtiCountMap[type] = (mbtiCountMap[type] || 0) + 1;
@@ -42,7 +42,7 @@ export default async function RankingPage() {
     "get_mbti_test_counts"
   );
 
-  let testCountMap: Record<string, number> = {};
+  const testCountMap: Record<string, number> = {};
 
   if (testError || !testStats) {
     console.error("Error fetching test counts:", testError);
@@ -51,7 +51,7 @@ export default async function RankingPage() {
       .select("mbti_type");
 
     if (allTests) {
-      allTests.forEach((test) => {
+      allTests.forEach((test: { mbti_type: string }) => {
         const type = test.mbti_type;
         testCountMap[type] = (testCountMap[type] || 0) + 1;
       });

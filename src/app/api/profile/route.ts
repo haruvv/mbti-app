@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // URLパラメータの代わりにClerkから直接認証情報を取得
     const user = await currentUser();

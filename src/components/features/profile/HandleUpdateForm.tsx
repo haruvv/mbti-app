@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/hooks/useUser";
 
+// カスタムエラー型を定義
+type SupabaseError = {
+  message: string;
+};
+
 export function HandleUpdateForm() {
   const { user, refreshUser } = useUser();
   const [newHandle, setNewHandle] = useState("");
@@ -51,9 +56,11 @@ export function HandleUpdateForm() {
       setSuccess(true);
       setNewHandle("");
       refreshUser();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error updating handle:", err);
-      setError(err.message || "ハンドルの更新に失敗しました");
+      const errorMessage =
+        err instanceof Error ? err.message : "ハンドルの更新に失敗しました";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

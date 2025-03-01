@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { QUESTIONS } from "../data/questions";
-import { calculateMBTIType } from "../utils/mbti";
 import {
   Play,
   Info,
@@ -18,19 +17,11 @@ import {
 } from "lucide-react";
 
 export default function TestPage() {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [answers, setAnswers] = useState<number[]>(
-    Array(QUESTIONS.length).fill(3)
-  );
   const [stats, setStats] = useState({
     userCount: "...",
     testCount: "...",
   });
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-  const questionsPerPage = 10;
-  const totalPages = Math.ceil(QUESTIONS.length / questionsPerPage);
-
   // 統計情報を取得
   useEffect(() => {
     async function fetchStats() {

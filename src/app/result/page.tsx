@@ -19,12 +19,13 @@ import { StrengthsWeaknesses } from "@/components/features/mbti/StrengthsWeaknes
 import { RelatedContent } from "@/components/features/mbti/RelatedContent";
 import { CompatibilityInfo } from "@/components/features/mbti/CompatibilityInfo";
 import { SaveResult } from "@/app/result/SaveResult";
+import { MBTITypeKey, TypeDescription } from "@/types/mbti";
 
 export default function ResultPage() {
   const searchParams = useSearchParams();
   const mbtiType = searchParams.get("type") || "";
   const hasError = searchParams.get("error") === "true";
-  const [description, setDescription] = useState<any>(null);
+  const [description, setDescription] = useState<TypeDescription | null>(null);
 
   useEffect(() => {
     const typeDesc = getTypeDescription(mbtiType);
@@ -163,7 +164,7 @@ export default function ResultPage() {
               <ContentCard>
                 <h3 className="text-lg font-bold mb-3">関連するキャリア</h3>
                 <div className="flex flex-wrap gap-2">
-                  {careerOptions.map((career, index) => (
+                  {careerOptions.map((career: string, index: number) => (
                     <span
                       key={index}
                       className="bg-white px-3 py-1 rounded-full text-sm border border-gray-200 shadow-sm"

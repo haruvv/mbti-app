@@ -44,11 +44,6 @@ export default function ProfileEditPage() {
   });
 
   const [error, setError] = useState<string | null>(null);
-  const [socialLinkErrors, setSocialLinkErrors] = useState({
-    twitter: "",
-    instagram: "",
-    website: "",
-  });
 
   // ページ読み込み時のデータ取得
   useEffect(() => {
@@ -134,19 +129,6 @@ export default function ProfileEditPage() {
   const handleMbtiChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, mbtiType: e.target.value }));
   };
-
-  // ソーシャルリンク変更ハンドラー
-  const handleSocialLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      socialLinks: {
-        ...prev.socialLinks,
-        [name]: value,
-      },
-    }));
-  };
-
   // 画像選択ボタンクリック時のハンドラー
   const handleImageButtonClick = () => {
     console.log("画像選択ボタンがクリックされました");
@@ -249,7 +231,6 @@ export default function ProfileEditPage() {
       isValid = false;
     }
 
-    setSocialLinkErrors(errors);
     return isValid;
   };
 
@@ -348,17 +329,6 @@ export default function ProfileEditPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // プロフィール画像のURL取得関数
-  const getProfileImageUrl = () => {
-    // カスタム画像が設定されている場合は、それを優先
-    if (formData.customImageUrl && formData.customImageUrl.trim() !== "") {
-      return formData.customImageUrl;
-    }
-
-    // デフォルト画像を使用
-    return "/images/default-avatar.png";
   };
 
   // MBTIタイプの一覧
