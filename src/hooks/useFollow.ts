@@ -18,9 +18,11 @@ export function useFollow() {
 
       if (error) throw error;
       return data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error toggling follow status:", err);
-      setError(err.message || "フォロー状態の更新に失敗しました");
+      const errorMessage =
+        err instanceof Error ? err.message : "フォロー状態の更新に失敗しました";
+      setError(errorMessage);
       return null;
     } finally {
       setIsLoading(false);

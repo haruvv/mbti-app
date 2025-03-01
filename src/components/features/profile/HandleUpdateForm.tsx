@@ -2,11 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/hooks/useUser";
 
-// カスタムエラー型を定義
-type SupabaseError = {
-  message: string;
-};
-
 export function HandleUpdateForm() {
   const { user, refreshUser } = useUser();
   const [newHandle, setNewHandle] = useState("");

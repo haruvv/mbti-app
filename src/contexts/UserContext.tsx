@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
 import { useUser } from "@clerk/nextjs";
 
@@ -31,8 +32,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [handle, setHandle] = useState<string>("");
   const [isHandleLoading, setIsHandleLoading] = useState(true);
 
-  // ユーザーハンドル情報を取得する
-  const fetchUserHandle = async () => {
+  // fetchUserHandleをuseCallbackでメモ化
+  const fetchUserHandle = useCallback(async () => {
     if (!user) return;
 
     setIsHandleLoading(true);
@@ -52,7 +53,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsHandleLoading(false);
     }
-  };
+  }, [user]);
 
   // ハンドル情報を更新する
   const updateHandle = (newHandle: string) => {
@@ -62,7 +63,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isLoaded) {
-      // ローカルストレージにキャッシュがあればそれを使用
       const cachedHandle = localStorage.getItem("userHandle");
       if (cachedHandle && user) {
         setHandle(cachedHandle);
@@ -71,7 +71,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         fetchUserHandle();
       }
     }
-  }, [user, isLoaded]);
+  }, [user, isLoaded, fetchUserHandle]);
 
   return (
     <UserContext.Provider

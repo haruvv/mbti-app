@@ -6,6 +6,16 @@ import { auth } from "@clerk/nextjs/server";
 import { FollowButton } from "@/components/features/follows/FollowButton";
 import { LinkTabs } from "@/components/ui/Tabs";
 
+// 必要な型定義を追加
+type UserProfile = {
+  id: string;
+  handle: string;
+  display_name?: string;
+  profile_display_name?: string;
+  custom_image_url?: string;
+  is_following?: boolean;
+};
+
 export default async function UserFollowsPage({
   params,
   searchParams,
@@ -46,16 +56,7 @@ export default async function UserFollowsPage({
   }
 
   // フォロー/フォロワーの取得
-  let followData: any[] = [];
-  let totalCount = 0;
-
-  // デバッグ用にパラメータを表示
-  console.log("RPC params:", {
-    p_user_id: user.user_id,
-    p_type: tab,
-    p_limit: 50,
-    p_offset: 0,
-  });
+  let followData: UserProfile[] = [];
 
   const { data: followResult, error: followError } = await supabase.rpc(
     "get_user_follows",
@@ -77,16 +78,17 @@ export default async function UserFollowsPage({
   if (followResult) {
     followData = followResult.users || [];
 
-    // フォロー状態を確認
-    if (currentUserId && followData && followData.length > 0) {
+    if (currentUserId && followData.length > 0) {
       const { data: followingData } = await supabase
         .from("follows")
         .select("following_id")
         .eq("follower_id", currentUserId);
 
-      const followingIds = followingData?.map((f) => f.following_id) || [];
+      // 型を明示的に指定
+      const followingIds =
+        followingData?.map((f: { following_id: string }) => f.following_id) ||
+        [];
 
-      // フォロー状態を各ユーザーに追加
       followData.forEach((user) => {
         user.is_following = followingIds.includes(user.id);
       });

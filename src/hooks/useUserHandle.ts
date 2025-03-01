@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 
 export function useUserHandle() {
@@ -7,7 +7,7 @@ export function useUserHandle() {
   const [isLoading, setIsLoading] = useState(true);
 
   // ユーザーハンドル情報を取得する
-  const fetchUserHandle = async () => {
+  const fetchUserHandle = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
@@ -27,7 +27,7 @@ export function useUserHandle() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   // ハンドル情報を更新する
   const updateHandle = (newHandle: string) => {
@@ -46,7 +46,7 @@ export function useUserHandle() {
         fetchUserHandle();
       }
     }
-  }, [user, isLoaded]);
+  }, [isLoaded, user, fetchUserHandle]);
 
   return { handle, isLoading, updateHandle, refreshHandle: fetchUserHandle };
 }
