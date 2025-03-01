@@ -35,12 +35,6 @@ export function TestForm() {
     setAnswers(newAnswers);
   };
 
-  const isPageComplete = () => {
-    // 少なくとも1つの質問に回答していれば次へ進める
-    // 中立(3)の選択も有効な回答として扱う
-    return true;
-  };
-
   const handleNext = () => {
     if (currentPage < totalPages - 1) {
       // 次のページへ

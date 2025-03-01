@@ -1,12 +1,6 @@
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowRight, Brain, Users, Activity, LineChart } from "lucide-react";
-import { typeDescriptions } from "./data/mbtiTypes";
 import { TypeCard } from "@/components/features/mbti/TypeCard";
-import { DebugPanel } from "@/components/debug/DebugPanel";
 
 export default async function HomePage() {
   // クライアントの作成

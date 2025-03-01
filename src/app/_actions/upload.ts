@@ -17,7 +17,7 @@ export async function uploadImage(file: File) {
     const buffer = Buffer.from(bytes);
 
     // Supabaseにアップロード
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("profile-images")
       .upload(filePath, buffer, {
         contentType: file.type,

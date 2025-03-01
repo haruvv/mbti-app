@@ -5,14 +5,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-  ArrowLeft,
-  Send,
-  MessageSquare,
-  Info,
-  Check,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Send, Info, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/ui/layout/PageContainer";
 import { ContentCard } from "@/components/ui/layout/ContentCard";

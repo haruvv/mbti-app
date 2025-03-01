@@ -3,9 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
-import type { MBTIType, TestResult } from "@/types/mbti";
-import { MBTITypeKey } from "../data/mbtiTypes";
 
 export async function getTestResults() {
   try {
@@ -94,7 +91,7 @@ export async function saveTestResult(formData: FormData) {
       }
 
       // 新しく作成したユーザーIDで保存
-      const { data, error } = await supabase.rpc("save_test_result", {
+      const { error } = await supabase.rpc("save_test_result", {
         p_user_id: newUser.id,
         p_mbti_type: mbtiType,
         p_answers: {},
@@ -110,7 +107,7 @@ export async function saveTestResult(formData: FormData) {
       }
     } else {
       // 既存ユーザーIDで保存（RPC関数を使用）
-      const { data, error } = await supabase.rpc("save_test_result", {
+      const { error } = await supabase.rpc("save_test_result", {
         p_user_id: userData.id,
         p_mbti_type: mbtiType,
         p_answers: {},

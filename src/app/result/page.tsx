@@ -1,29 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import {
-  Brain,
-  Users,
-  FileText,
-  Share2,
-  ArrowRight,
-  CheckCircle,
-  AlertCircle,
-  Briefcase,
-  Star,
-  Heart,
-  BookOpen,
-  Lightbulb,
-  Award,
-} from "lucide-react";
+import { Brain, Share2, Lightbulb, Award } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { typeDescriptions } from "../data/mbtiTypes";
+import { typeDescriptions } from "@/app/data/mbtiTypes";
 import { PageContainer } from "@/components/ui/layout/PageContainer";
 import { PageHeader } from "@/components/ui/layout/PageHeader";
 import { ContentCard } from "@/components/ui/layout/ContentCard";
-import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { mbtiColors } from "@/app/data/mbtiColors";
 import { getTypeDescription, getCareerOptions } from "@/app/_utils/mbtiResult";
@@ -33,12 +18,11 @@ import { LearningStyle } from "@/components/features/mbti/LearningStyle";
 import { StrengthsWeaknesses } from "@/components/features/mbti/StrengthsWeaknesses";
 import { RelatedContent } from "@/components/features/mbti/RelatedContent";
 import { CompatibilityInfo } from "@/components/features/mbti/CompatibilityInfo";
-import { SaveResult } from "./SaveResult";
+import { SaveResult } from "@/app/result/SaveResult";
 
 export default function ResultPage() {
   const searchParams = useSearchParams();
   const mbtiType = searchParams.get("type") || "";
-  const fromTest = searchParams.get("from") === "test";
   const hasError = searchParams.get("error") === "true";
   const [description, setDescription] = useState<any>(null);
 

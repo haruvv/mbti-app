@@ -1,6 +1,6 @@
 import React from "react";
 import { MBTITypeKey } from "@/app/data/mbtiTypes";
-import { mbtiColors, getTypeColorClass } from "@/app/data/mbtiColors";
+import { mbtiColors } from "@/app/data/mbtiColors";
 import { motion } from "framer-motion";
 
 interface MbtiTypeDisplayProps {
@@ -14,8 +14,6 @@ export function MbtiTypeDisplay({
   title,
   description,
 }: MbtiTypeDisplayProps) {
-  const typeColor = mbtiColors[type];
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

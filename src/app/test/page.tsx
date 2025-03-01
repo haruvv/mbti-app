@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { QUESTIONS } from "../data/questions";
 import { calculateMBTIType } from "../utils/mbti";
-import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import {
   Play,
   Info,
@@ -63,50 +60,6 @@ export default function TestPage() {
 
     fetchStats();
   }, []);
-
-  // 現在のページの質問を取得
-  const currentQuestions = QUESTIONS.slice(
-    currentPage * questionsPerPage,
-    (currentPage + 1) * questionsPerPage
-  );
-
-  // 進捗率の計算
-  const progress = Math.round(((currentPage + 1) / totalPages) * 100);
-
-  const handleAnswer = (questionIndex: number, value: number) => {
-    const newAnswers = [...answers];
-    newAnswers[currentPage * questionsPerPage + questionIndex] = value;
-    setAnswers(newAnswers);
-  };
-
-  const isPageComplete = () => {
-    const pageAnswers = answers.slice(
-      currentPage * questionsPerPage,
-      (currentPage + 1) * questionsPerPage
-    );
-
-    // 少なくとも1つの質問に回答していれば次へ進める
-    return pageAnswers.some((answer) => answer !== 3);
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages - 1) {
-      // 次のページへ
-      setCurrentPage(currentPage + 1);
-      window.scrollTo(0, 0);
-    } else {
-      // 最終ページなら結果へ
-      const mbtiType = calculateMBTIType(answers);
-      router.push(`/result?type=${mbtiType}&from=test`);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-      window.scrollTo(0, 0);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 relative overflow-hidden">

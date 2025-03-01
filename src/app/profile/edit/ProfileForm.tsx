@@ -6,13 +6,6 @@ import Image from "next/image";
 import { updateUserProfile } from "@/app/_actions/profile";
 import { toast } from "sonner";
 import { uploadImage } from "@/app/_actions/upload";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { typeDescriptions } from "@/app/data/mbtiTypes";
 import { createClient } from "@/lib/supabase/client";
 
@@ -47,7 +40,6 @@ export function ProfileForm({
     bookmarkedTypes: [],
     handle: "",
   },
-  mbtiOptions = [],
   latestMbtiType,
 }: Props) {
   const router = useRouter();
@@ -134,10 +126,6 @@ export function ProfileForm({
     setFormData(initialData);
     setChangedFields(new Set());
     toast("変更をリセットしました");
-  };
-
-  const isTypeBookmarked = (type: string) => {
-    return formData.bookmarkedTypes?.includes(type) || false;
   };
 
   return (

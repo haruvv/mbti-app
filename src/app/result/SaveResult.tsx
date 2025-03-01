@@ -13,7 +13,6 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const saveAttemptedRef = useRef(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const isNewResult = searchParams.get("from") === "test";
@@ -48,10 +47,6 @@ export function SaveResult({ mbtiType }: { mbtiType: MBTITypeKey }) {
       setIsLoading(true);
 
       try {
-        const answers = JSON.parse(
-          localStorage.getItem("mbti_answers") || "{}"
-        );
-
         let eScore = 50;
         let nScore = 50;
         let fScore = 50;

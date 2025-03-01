@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
     try {
       // usersテーブルのみ更新（認証連携用の最小限の情報）
-      const { data, error: userError } = await supabase.from("users").upsert(
+      const { error: userError } = await supabase.from("users").upsert(
         {
           clerk_id: id,
           email: email,

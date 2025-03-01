@@ -246,7 +246,7 @@ export async function updateProfile(formData: FormData) {
     }
 
     // 既存のプロフィールを確認
-    const { data: existingProfile, error: profileCheckError } = await supabase
+    const { data: existingProfile } = await supabase
       .from("user_profiles")
       .select("*")
       .eq("user_id", userData.id)
@@ -254,7 +254,7 @@ export async function updateProfile(formData: FormData) {
 
     // handleが変更されている場合、既に使用されていないか確認
     if (handle) {
-      const { data: existingHandle, error: handleError } = await supabase
+      const { data: existingHandle } = await supabase
         .from("user_profiles")
         .select("user_id")
         .eq("handle", handle)

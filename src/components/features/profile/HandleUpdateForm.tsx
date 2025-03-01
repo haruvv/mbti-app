@@ -41,7 +41,7 @@ export function HandleUpdateForm() {
     setSuccess(false);
 
     try {
-      const { data, error } = await supabase.rpc("update_user_handle", {
+      const { error } = await supabase.rpc("update_user_handle", {
         p_user_id: user.id,
         p_new_handle: newHandle,
       });

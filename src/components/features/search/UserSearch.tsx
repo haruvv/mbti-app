@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, X, User } from "lucide-react";
-import Link from "next/link";
+import { Search, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
-import { createClient } from "@supabase/supabase-js";
 
 // ユーザーのイニシャルを取得する関数を追加
 const getInitial = (name: string): string => {

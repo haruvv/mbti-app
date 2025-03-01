@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export function UsernameForm({
-  clerkId,
   currentUsername = "",
 }: {
   clerkId: string;

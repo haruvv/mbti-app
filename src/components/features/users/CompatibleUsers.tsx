@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { FormattedDate } from "@/components/ui/FormattedDate";
 import { useUser } from "@/hooks/useUser";
 
 export function CompatibleUsers() {

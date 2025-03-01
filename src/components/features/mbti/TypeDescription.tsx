@@ -1,5 +1,5 @@
 import React from "react";
-import { MBTITypeKey, typeDescriptions } from "@/app/data/mbtiTypes";
+import { MBTITypeKey } from "@/app/data/mbtiTypes";
 import { MBTITypeDescription } from "@/app/data/mbtiTypes";
 import {
   Card,
@@ -16,11 +16,7 @@ interface TypeDescriptionProps {
   mbtiType: string;
 }
 
-export function TypeDescription({
-  type,
-  typeData,
-  mbtiType,
-}: TypeDescriptionProps) {
+export function TypeDescription({ typeData, mbtiType }: TypeDescriptionProps) {
   if (!typeData) {
     return <div>タイプ情報が見つかりません</div>;
   }

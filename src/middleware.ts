@@ -2,9 +2,10 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// 保護したいルートを定義
+// 保護ルート（認証が必要）
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
-// 公開ルートを定義（typesを追加）
+
+// 公開ルート（認証不要）
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
@@ -16,37 +17,42 @@ const isPublicRoute = createRouteMatcher([
   "/types(.*)",
 ]);
 
-// リダイレクト用の関数
+// リダイレクト処理
 function handleRedirects(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // /type/XXX から /types/XXX へのリダイレクト
+  // /type/XXX → /types/XXX のリダイレクト（恒久的）
   if (pathname.startsWith("/type/")) {
     return NextResponse.redirect(
-      new URL(pathname.replace("/type/", "/types/"), req.url)
+      new URL(pathname.replace("/type/", "/types/"), req.url),
+      301
     );
   }
 
   return null;
 }
 
-// 基本的な保護を適用するミドルウェア
+// Clerk ミドルウェア
 export default clerkMiddleware(async (auth, req) => {
-  // リダイレクトを処理
+  // リダイレクト処理
   const redirect = handleRedirects(req);
   if (redirect) return redirect;
 
-  // 保護されたルートの場合のみ認証を要求
+  // 公開ルートなら認証不要
+  if (isPublicRoute(req)) {
+    return NextResponse.next();
+  }
+
+  // 保護ルートなら認証を要求
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
 });
 
-// Next.jsのミドルウェアマッチャー設定
+// Next.js のミドルウェアマッチャー設定
 export const config = {
   matcher: [
-    // 静的ファイルと_nextを除くすべてのルートに適用
-    "/((?!.*\\.[\\w]+$|_next).*)",
+    "/((?!.*\\.[\\w]+$|_next).*)", // 静的ファイルと_nextを除外
     "/",
     "/(api|trpc)(.*)",
   ],

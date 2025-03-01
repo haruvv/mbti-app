@@ -1,4 +1,4 @@
-import { typeDescriptions, MBTITypeKey } from "@/app/data/mbtiTypes";
+import { MBTITypeKey } from "@/app/data/mbtiTypes";
 
 export type { MBTITypeKey as MBTIType };
 

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { typeDescriptions } from "../data/mbtiTypes";
-import { PieChart, BarChart3, Users, Award, LineChart } from "lucide-react";
+import { PieChart, Users, Award, LineChart } from "lucide-react";
 
 type MbtiRanking = {
   mbti_type: string;

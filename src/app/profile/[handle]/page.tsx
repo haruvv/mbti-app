@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { DebugPanel } from "@/components/debug/DebugPanel";
 import { Button } from "@/components/ui/button";
-import { mbtiColors, getTypeGradientClass } from "@/app/data/mbtiColors";
+import { mbtiColors } from "@/app/data/mbtiColors";
 
 // 最上部でデバッグ管理用の定数を追加
 const DEBUG_MODE = process.env.NODE_ENV === "development";
@@ -80,7 +80,7 @@ export default async function UserProfilePage({
     // ユーザーが見つからない場合、users テーブルで再検索
     let userData = profileUser;
     if (profileError || !profileUser) {
-      const { data: userFromUsersTable, error: usersError } = await supabase
+      const { data: userFromUsersTable } = await supabase
         .from("users")
         .select(
           `

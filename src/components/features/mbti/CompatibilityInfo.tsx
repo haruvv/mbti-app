@@ -1,6 +1,6 @@
 import React from "react";
 import { MBTITypeKey } from "@/app/data/mbtiTypes";
-import { Heart, Users } from "lucide-react";
+import { Heart } from "lucide-react";
 import { ContentCard } from "@/components/ui/layout/ContentCard";
 import { motion } from "framer-motion";
 import { getCompatibleTypes } from "@/app/_utils/mbtiResult";

@@ -76,7 +76,6 @@ export default async function UserFollowsPage({
 
   if (followResult) {
     followData = followResult.users || [];
-    totalCount = followResult.total_count || 0;
 
     // フォロー状態を確認
     if (currentUserId && followData && followData.length > 0) {
