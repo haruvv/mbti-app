@@ -22,7 +22,7 @@ export function calculateMBTIType(answers: number[]): string {
   });
 
   return Object.entries(dimensions)
-    .map(([_, scores]) => {
+    .map(([, scores]) => {
       const [first, second] = Object.entries(scores);
       return first[1] >= second[1] ? first[0] : second[0];
     })

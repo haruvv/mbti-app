@@ -29,7 +29,7 @@ import { mbtiColors } from "@/app/data/mbtiColors";
 // 最上部でデバッグ管理用の定数を追加
 const DEBUG_MODE = process.env.NODE_ENV === "development";
 
-// MBTIキーの型定義を追加
+// MBTIキーの型定義を明確にする
 type MBTITypeKey = keyof typeof typeDescriptions;
 
 // MBTIの説明の型定義
@@ -57,7 +57,7 @@ export default async function UserProfilePage({
 
   try {
     // ユーザー情報の取得（詳細データを含む）
-    const { data: profileUser, error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from("user_profiles")
       .select(
         `
@@ -77,40 +77,43 @@ export default async function UserProfilePage({
       .eq("handle", handle)
       .single();
 
-    // ユーザーが見つからない場合、users テーブルで再検索
-    let userData = profileUser;
-    if (profileError || !profileUser) {
-      const { data: userFromUsersTable } = await supabase
+    // ユーザーが見つからない場合、users テーブルで検索するが、
+    // 同じ構造にデータを変換する
+    let userData = profileData;
+    if (profileError || !profileData) {
+      // usersテーブルからデータを取得
+      const { data: userFromUsersTable, error: userError } = await supabase
         .from("users")
         .select(
           `
           id,
           handle,
           display_name,
-          created_at,
-          user_profiles (
-            id,
-            display_name,
-            custom_image_url,
-            preferred_mbti,
-            bio,
-            bookmarked_types,
-            social_links,
-            handle,
-            created_at,
-            updated_at
-          )
+          created_at
         `
         )
         .eq("handle", handle)
         .single();
 
-      if (!userFromUsersTable) {
+      if (!userFromUsersTable || userError) {
         console.log(`ユーザー "${handle}" は見つかりませんでした`);
         return notFound();
       }
 
-      userData = userFromUsersTable;
+      // user_profilesと互換性のある構造に変換
+      userData = {
+        id: userFromUsersTable.id,
+        user_id: userFromUsersTable.id, // usersテーブルのidをuser_idとして使用
+        display_name: userFromUsersTable.display_name,
+        handle: userFromUsersTable.handle,
+        created_at: userFromUsersTable.created_at,
+        custom_image_url: null,
+        preferred_mbti: null,
+        bio: null,
+        bookmarked_types: [],
+        social_links: {},
+        updated_at: userFromUsersTable.created_at,
+      };
     }
 
     // null チェックを追加
@@ -174,26 +177,25 @@ export default async function UserProfilePage({
 
     const latestTestResult = testResults?.[0];
 
-    // 表示データを準備
-    const profile =
-      "user_profiles" in userData
-        ? userData.user_profiles[0] || userData
-        : userData;
+    // プロフィールデータを準備
+    const profile = userData;
     const displayName = profile.display_name || `@${userData.handle}`;
+    // 明示的に型アサーションを行う
     const mbtiType = profile.preferred_mbti as MBTITypeKey | null;
     const typeDescription = mbtiType
       ? (typeDescriptions[mbtiType] as MBTITypeDescription)
       : null;
-    const joinDate = userData.created_at || profile.created_at;
+    const joinDate = userData.created_at;
 
     // MBTIタイプに基づいた色を設定（ない場合はデフォルト色）
     const typeColor =
-      mbtiType && mbtiColors[mbtiType]
-        ? mbtiColors[mbtiType]
+      mbtiType && typeof mbtiType === "string" && mbtiType in mbtiColors
+        ? mbtiColors[mbtiType as MBTITypeKey]
         : {
             from: "from-slate-700",
             to: "to-gray-800",
             text: "text-slate-700",
+            bg: "bg-slate-100",
           };
 
     // ソーシャルリンクの処理
@@ -226,18 +228,10 @@ export default async function UserProfilePage({
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
             {/* ヘッダー部分 */}
             <div
-              className={`h-32 ${mbtiType ? mbtiColors[mbtiType].bg : "bg-gradient-to-r from-slate-700 to-gray-800"} relative`}
+              className={`h-32 ${mbtiType && typeof mbtiType === "string" && mbtiType in mbtiColors ? mbtiColors[mbtiType as MBTITypeKey].bg : "bg-gradient-to-r from-slate-700 to-gray-800"} relative`}
             >
               {/* MBTIタイプを大きく表示 - ヘッダーに追加 */}
-              {mbtiType && (
-                <div className="absolute bottom-4 right-6">
-                  <div
-                    className={`${mbtiType === "ISTJ" ? "bg-white text-black" : "bg-white/90 backdrop-blur " + mbtiColors[mbtiType].text} font-bold px-4 py-2 rounded-full shadow-sm text-xl border-2 border-white`}
-                  >
-                    {mbtiType}
-                  </div>
-                </div>
-              )}
+              {typeof mbtiType === "string" && mbtiType}
             </div>
 
             <div className="px-6 pb-6">
@@ -258,10 +252,10 @@ export default async function UserProfilePage({
                     />
                   </div>
 
-                  {/* MBTIタイプのバッジをアバター上に配置 */}
-                  {mbtiType && (
+                  {/* MBTIタイプのバッジをアバター上に配置 - mbtiTypeが確実に文字列である場合のみレンダリング */}
+                  {mbtiType && typeof mbtiType === "string" && (
                     <div
-                      className={`absolute -bottom-2 -right-2 ${mbtiColors[mbtiType].bg} ${mbtiType === "ISTJ" ? "text-white" : mbtiColors[mbtiType].text.replace("text-", "text-")} font-bold px-2 py-1 rounded-full text-sm shadow-md border-2 border-white`}
+                      className={`absolute -bottom-2 -right-2 ${mbtiColors[mbtiType as MBTITypeKey].bg} ${mbtiType === "ISTJ" ? "text-white" : mbtiColors[mbtiType as MBTITypeKey].text.replace("text-", "text-")} font-bold px-2 py-1 rounded-full text-sm shadow-md border-2 border-white`}
                     >
                       {mbtiType}
                     </div>
@@ -306,7 +300,6 @@ export default async function UserProfilePage({
               {/* フォロー情報 */}
               <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <FollowStats
-                  userId={userData.user_id || userData.id}
                   handle={userData.handle}
                   followingCount={followingCount}
                   followersCount={followersCount}
@@ -415,16 +408,16 @@ export default async function UserProfilePage({
                 <Card>
                   <CardHeader className="bg-white border-b border-gray-100">
                     <CardTitle
-                      className={`text-lg flex items-center ${mbtiType ? mbtiColors[mbtiType].text : "text-slate-700"}`}
+                      className={`text-lg flex items-center ${mbtiType && typeof mbtiType === "string" && mbtiType in mbtiColors ? mbtiColors[mbtiType as MBTITypeKey].text : "text-slate-700"}`}
                     >
                       <BadgeCheck
                         className={`mr-2 h-5 w-5 ${typeColor.text}`}
                       />
                       <span className="flex items-center">
                         <span
-                          className={`${mbtiType ? `bg-gradient-to-r ${mbtiColors[mbtiType].from} ${mbtiColors[mbtiType].to}` : "bg-gradient-to-r from-slate-700 to-gray-800"} text-white font-bold px-2 py-0.5 rounded mr-2`}
+                          className={`${mbtiType && typeof mbtiType === "string" && mbtiType in mbtiColors ? `bg-gradient-to-r ${mbtiColors[mbtiType as MBTITypeKey].from} ${mbtiColors[mbtiType as MBTITypeKey].to}` : "bg-gradient-to-r from-slate-700 to-gray-800"} text-white font-bold px-2 py-0.5 rounded mr-2`}
                         >
-                          {mbtiType}
+                          {typeof mbtiType === "string" ? mbtiType : ""}
                         </span>
                         タイプ情報
                       </span>
@@ -482,13 +475,17 @@ export default async function UserProfilePage({
                     <CardContent>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         {profile.bookmarked_types.map((type: string) => {
+                          // 明示的な型チェックを行う
                           const typeKey = type as MBTITypeKey;
-                          const typeColor = mbtiColors[typeKey] || {
-                            from: "from-slate-700",
-                            to: "to-gray-800",
-                            text: "text-slate-700",
-                            bg: "bg-slate-100",
-                          };
+                          const typeColor =
+                            typeKey in mbtiColors
+                              ? mbtiColors[typeKey]
+                              : {
+                                  from: "from-slate-700",
+                                  to: "to-gray-800",
+                                  text: "text-slate-700",
+                                  bg: "bg-slate-100",
+                                };
 
                           return (
                             <div

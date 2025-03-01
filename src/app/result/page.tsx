@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Brain, Share2, Lightbulb, Award } from "lucide-react";
 import Link from "next/link";
@@ -21,7 +22,8 @@ import { CompatibilityInfo } from "@/components/features/mbti/CompatibilityInfo"
 import { SaveResult } from "@/app/result/SaveResult";
 import { MBTITypeKey, TypeDescription } from "@/types/mbti";
 
-export default function ResultPage() {
+// useSearchParamsを使用するコンポーネントを分離
+function ResultContent() {
   const searchParams = useSearchParams();
   const mbtiType = searchParams.get("type") || "";
   const hasError = searchParams.get("error") === "true";
@@ -304,5 +306,14 @@ export default function ResultPage() {
         </Button>
       </div>
     </PageContainer>
+  );
+}
+
+// ページコンポーネント
+export default function ResultPage() {
+  return (
+    <Suspense fallback={<div>読み込み中...</div>}>
+      <ResultContent />
+    </Suspense>
   );
 }

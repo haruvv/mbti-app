@@ -8,23 +8,34 @@ export type TestResult = {
   created_at: string;
 };
 
+export type MBTITypeDescription = {
+  title: string;
+  description: string;
+  traits: string[];
+  advice: string;
+  strengths: string[];
+  weaknesses: string[];
+  careers: string[];
+  famousPeople: string[];
+};
+
 export type MBTITypeKey =
+  | "INTJ"
+  | "INTP"
+  | "ENTJ"
+  | "ENTP"
+  | "INFJ"
+  | "INFP"
+  | "ENFJ"
+  | "ENFP"
   | "ISTJ"
   | "ISFJ"
-  | "INFJ"
-  | "INTJ"
-  | "ISTP"
-  | "ISFP"
-  | "INFP"
-  | "INTP"
-  | "ESTP"
-  | "ESFP"
-  | "ENFP"
-  | "ENTP"
   | "ESTJ"
   | "ESFJ"
-  | "ENFJ"
-  | "ENTJ";
+  | "ISTP"
+  | "ISFP"
+  | "ESTP"
+  | "ESFP";
 
 export interface TypeDescription {
   title: string;

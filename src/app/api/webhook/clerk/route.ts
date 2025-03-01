@@ -4,7 +4,6 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 
 export async function POST(req: Request) {
-  // Webhookシークレットを取得
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -13,8 +12,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // リクエストの検証
-  const headerPayload = headers();
+  const headerPayload = await headers();
   const svix_id = headerPayload.get("svix-id");
   const svix_timestamp = headerPayload.get("svix-timestamp");
   const svix_signature = headerPayload.get("svix-signature");
@@ -25,11 +23,9 @@ export async function POST(req: Request) {
     });
   }
 
-  // リクエストボディを取得
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
-  // Webhookの検証
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt: WebhookEvent;
 
@@ -47,33 +43,28 @@ export async function POST(req: Request) {
   }
 
   const supabase = createClient();
-
-  // イベントタイプに基づいて処理
   const eventType = evt.type;
 
   if (eventType === "user.created" || eventType === "user.updated") {
     const { id, email_addresses } = evt.data;
-
-    // メールアドレスの取得（必須）
     const email =
       email_addresses && email_addresses.length > 0
         ? email_addresses[0].email_address
-        : "dummy@example.com"; // フォールバック
+        : "dummy@example.com";
 
     try {
-      // usersテーブルのみ更新（認証連携用の最小限の情報）
+      // returning を削除
       const { error: userError } = await supabase.from("users").upsert(
         {
           clerk_id: id,
           email: email,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "clerk_id", returning: "minimal" }
+        { onConflict: "clerk_id" } // returning を削除
       );
 
       if (userError) throw userError;
 
-      // ユーザーIDを取得
       const { data: user, error: getUserError } = await supabase
         .from("users")
         .select("id")
@@ -82,8 +73,6 @@ export async function POST(req: Request) {
 
       if (getUserError) throw getUserError;
 
-      // 初回作成時のみ基本的なプロフィールを作成
-      // 既存のプロフィールは上書きしない（ユーザーが後でプロフィール編集で設定）
       const { data: existingProfile } = await supabase
         .from("user_profiles")
         .select("id")
@@ -91,12 +80,11 @@ export async function POST(req: Request) {
         .maybeSingle();
 
       if (!existingProfile) {
-        // 初期プロフィールの作成（最小限）
         const { error: profileError } = await supabase
           .from("user_profiles")
           .insert({
             user_id: user.id,
-            display_name: "ゲスト", // デフォルト名
+            display_name: "ゲスト",
           });
 
         if (profileError) throw profileError;
@@ -119,8 +107,6 @@ export async function POST(req: Request) {
     const userId = evt.data.id;
 
     try {
-      // Clerkユーザーが削除された場合、関連するSupabaseのユーザーを削除
-      // CASCADEでuser_profilesとtest_resultsも削除される
       const { error: deleteError } = await supabase
         .from("users")
         .delete()

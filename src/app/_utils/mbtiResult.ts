@@ -1,4 +1,5 @@
-import { MBTITypeKey, typeDescriptions } from "@/app/data/mbtiTypes";
+import { typeDescriptions } from "@/app/data/mbtiTypes";
+import { MBTITypeKey } from "@/types/mbti";
 
 // MBTIタイプの詳細データを取得する
 export function getTypeDescription(mbtiType: string) {

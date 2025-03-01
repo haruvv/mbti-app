@@ -10,9 +10,14 @@ import { ArrowLeft, Calendar } from "lucide-react";
 export default async function TestHistoryDetailPage({
   params,
 }: {
-  params: { uuid: string };
+  params: Promise<{ uuid: string }>; // 型を Promise に変更
 }) {
-  const { uuid } = params;
+  const resolvedParams = await params; // Promise を解決
+  if (!resolvedParams?.uuid) {
+    notFound();
+  }
+
+  const uuid = resolvedParams.uuid;
 
   // 特定のテスト結果を取得
   const { data: testResult, error } = await getTestResultById(uuid);

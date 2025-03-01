@@ -1,4 +1,4 @@
-import { MBTITypeKey } from "./mbtiTypes";
+import { MBTITypeKey } from "@/types/mbti";
 
 // MBTIタイプごとの色定義のインターフェース
 export interface MBTITypeColor {

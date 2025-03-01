@@ -73,8 +73,8 @@ export function QuestionForm({ questions }: { questions: Question[] }) {
                 ))}
               </div>
               <div className="flex justify-between text-sm text-gray-500">
-                <span>{question.leftLabel}</span>
-                <span>{question.rightLabel}</span>
+                <span>{"全く同意しない"}</span>
+                <span>{"強く同意する"}</span>
               </div>
             </div>
           );

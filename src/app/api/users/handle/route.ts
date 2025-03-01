@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 
 export async function PUT(request: Request) {
   try {
-    const { userId } = auth();
+    // auth() を await で解決
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }

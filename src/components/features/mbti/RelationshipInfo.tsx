@@ -1,5 +1,5 @@
 import React from "react";
-import { MBTITypeKey } from "@/app/data/mbtiTypes";
+import { MBTITypeKey } from "@/types/mbti";
 import { Users } from "lucide-react";
 import { ContentCard } from "@/components/ui/layout/ContentCard";
 import { motion } from "framer-motion";

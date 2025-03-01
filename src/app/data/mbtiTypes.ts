@@ -1,31 +1,4 @@
-export type MBTITypeDescription = {
-  title: string;
-  description: string;
-  traits: string[];
-  advice: string;
-  strengths: string[];
-  weaknesses: string[];
-  careers: string[];
-  famousPeople: string[];
-};
-
-export type MBTITypeKey =
-  | "INTJ"
-  | "INTP"
-  | "ENTJ"
-  | "ENTP"
-  | "INFJ"
-  | "INFP"
-  | "ENFJ"
-  | "ENFP"
-  | "ISTJ"
-  | "ISFJ"
-  | "ESTJ"
-  | "ESFJ"
-  | "ISTP"
-  | "ISFP"
-  | "ESTP"
-  | "ESFP";
+import { MBTITypeKey, MBTITypeDescription } from "@/types/mbti";
 
 export const typeDescriptions: Record<MBTITypeKey, MBTITypeDescription> = {
   INTJ: {

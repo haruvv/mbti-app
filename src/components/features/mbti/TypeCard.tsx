@@ -1,5 +1,6 @@
 import React from "react";
-import { MBTITypeKey, typeDescriptions } from "@/app/data/mbtiTypes";
+import { typeDescriptions } from "@/app/data/mbtiTypes";
+import { MBTITypeKey } from "@/types/mbti";
 import { getTypeColorClass } from "@/app/data/mbtiColors";
 
 interface TypeCardProps {

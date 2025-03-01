@@ -1,5 +1,4 @@
 import React from "react";
-import { MBTITypeKey } from "@/app/data/mbtiTypes";
 import { Heart } from "lucide-react";
 import { ContentCard } from "@/components/ui/layout/ContentCard";
 import { motion } from "framer-motion";
@@ -7,8 +6,27 @@ import { getCompatibleTypes } from "@/app/_utils/mbtiResult";
 import Link from "next/link";
 import { mbtiColors } from "@/app/data/mbtiColors";
 
+// MBTITypeKeyが名前空間として定義されている可能性があるため、型として使用できるように修正
+type MBTIType =
+  | "INTJ"
+  | "INTP"
+  | "ENTJ"
+  | "ENTP"
+  | "INFJ"
+  | "INFP"
+  | "ENFJ"
+  | "ENFP"
+  | "ISTJ"
+  | "ISFJ"
+  | "ESTJ"
+  | "ESFJ"
+  | "ISTP"
+  | "ISFP"
+  | "ESTP"
+  | "ESFP";
+
 interface CompatibilityInfoProps {
-  type: MBTITypeKey;
+  type: MBTIType;
 }
 
 export function CompatibilityInfo({ type }: CompatibilityInfoProps) {
@@ -35,7 +53,7 @@ export function CompatibilityInfo({ type }: CompatibilityInfoProps) {
             {compatibility.bestMatch.map((matchType, index) => (
               <Link href={`/types/${matchType.toLowerCase()}`} key={index}>
                 <span
-                  className={`${mbtiColors[matchType as MBTITypeKey].bg} ${mbtiColors[matchType as MBTITypeKey].text} px-3 py-1 rounded-full text-sm font-medium border ${mbtiColors[matchType as MBTITypeKey].border} hover:shadow-md transition-shadow`}
+                  className={`${mbtiColors[matchType as MBTIType].bg} ${mbtiColors[matchType as MBTIType].text} px-3 py-1 rounded-full text-sm font-medium border ${mbtiColors[matchType as MBTIType].border} hover:shadow-md transition-shadow`}
                 >
                   {matchType}
                 </span>
@@ -52,7 +70,7 @@ export function CompatibilityInfo({ type }: CompatibilityInfoProps) {
             {compatibility.goodMatch.map((matchType, index) => (
               <Link href={`/types/${matchType.toLowerCase()}`} key={index}>
                 <span
-                  className={`bg-white/80 ${mbtiColors[matchType as MBTITypeKey].text} px-3 py-1 rounded-full text-sm font-medium border ${mbtiColors[matchType as MBTITypeKey].border} hover:shadow-md transition-shadow`}
+                  className={`bg-white/80 ${mbtiColors[matchType as MBTIType].text} px-3 py-1 rounded-full text-sm font-medium border ${mbtiColors[matchType as MBTIType].border} hover:shadow-md transition-shadow`}
                 >
                   {matchType}
                 </span>

@@ -1,4 +1,5 @@
 import { typeDescriptions } from "@/app/data/mbtiTypes";
+import { MBTITypeKey } from "@/types/mbti";
 import { TypeCard } from "@/components/features/mbti/TypeCard";
 import { TypeDescription } from "@/components/features/mbti/TypeDescription";
 import Link from "next/link";
@@ -28,7 +29,11 @@ export default async function TypePage({
 
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
-            <TypeCard type={mbtiType} title={typeData.title} large />
+            <TypeCard
+              type={mbtiType as MBTITypeKey}
+              title={typeData.title}
+              large
+            />
 
             <div className="mt-6 space-y-4">
               <Link
@@ -42,7 +47,7 @@ export default async function TypePage({
 
           <div className="md:col-span-2">
             <TypeDescription
-              type={mbtiType}
+              type={mbtiType as MBTITypeKey}
               typeData={typeData}
               mbtiType={mbtiType}
             />

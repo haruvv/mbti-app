@@ -1,5 +1,6 @@
 import { typeDescriptions } from "../data/mbtiTypes";
 import { TypeCard } from "@/components/features/mbti/TypeCard";
+import { MBTITypeKey } from "@/types/mbti";
 import Link from "next/link";
 
 export default function TypesPage() {
@@ -54,7 +55,10 @@ export default function TypesPage() {
                   href={`/types/${type.toLowerCase()}`}
                   className="group transition-transform hover:-translate-y-1"
                 >
-                  <TypeCard type={type} title={typeDescriptions[type].title} />
+                  <TypeCard
+                    type={type as MBTITypeKey}
+                    title={typeDescriptions[type].title}
+                  />
                 </Link>
               ))}
             </div>

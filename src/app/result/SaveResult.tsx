@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { saveTestResult } from "../_actions/test";
-import type { MBTITypeKey } from "../data/mbtiTypes";
+import type { MBTITypeKey } from "@/types/mbti";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useSearchParams } from "next/navigation";

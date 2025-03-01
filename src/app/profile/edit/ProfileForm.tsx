@@ -94,28 +94,30 @@ export function ProfileForm({
     setIsLoading(true);
 
     try {
-      // プロフィールデータを正しい形式で準備
       const profileData = {
         displayName: formData.displayName,
         imageUrl: formData.imageUrl,
         preferredMbti: formData.preferredMbti || null,
         bio: formData.bio,
         bookmarkedTypes: formData.bookmarkedTypes,
-        handle: formData.handle, // handleは常に含める
+        handle: formData.handle,
       };
 
-      const { success, error } = await updateUserProfile(userId, profileData);
+      const { success, error: updateError } = await updateUserProfile(
+        userId,
+        profileData
+      );
 
       if (!success) {
-        toast.error(error);
+        toast.error(updateError);
         return;
       }
 
       toast.success("プロフィールを更新しました");
       router.push("/profile");
       router.refresh();
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      console.error("Error:", err);
       toast.error("更新に失敗しました");
     } finally {
       setIsLoading(false);
@@ -239,7 +241,8 @@ export function ProfileForm({
                     setFormData((prev) => ({ ...prev, imageUrl: url }));
                     setChangedFields((prev) => new Set(prev).add("imageUrl"));
                     toast.success("画像をアップロードしました");
-                  } catch (error) {
+                  } catch (err) {
+                    console.error("画像のアップロードに失敗しました", err);
                     toast.error("画像のアップロードに失敗しました");
                   }
                 }}

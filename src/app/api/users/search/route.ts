@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = createClient();
-  const { userId } = auth();
+  const { userId } = await auth();
 
   // ログインユーザーのSupabase IDを取得
   let currentUserId = null;

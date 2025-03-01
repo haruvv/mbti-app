@@ -1,6 +1,5 @@
 import React from "react";
-import { MBTITypeKey } from "@/app/data/mbtiTypes";
-import { MBTITypeDescription } from "@/app/data/mbtiTypes";
+import { MBTITypeKey, MBTITypeDescription } from "@/types/mbti";
 import {
   Card,
   CardContent,

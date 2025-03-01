@@ -1,5 +1,6 @@
 import React from "react";
-import { MBTITypeKey, typeDescriptions } from "@/app/data/mbtiTypes";
+import { typeDescriptions } from "@/app/data/mbtiTypes";
+import { MBTITypeKey } from "@/types/mbti";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { ContentCard } from "@/components/ui/layout/ContentCard";
 import { motion } from "framer-motion";
