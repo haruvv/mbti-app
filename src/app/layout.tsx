@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/contexts/UserContext";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
             <main className="flex-grow">{children}</main>
             <Footer />
             <Toaster />
+            <SpeedInsights />
           </body>
         </html>
       </UserProvider>

@@ -1,10 +1,6 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
-  // クライアントの作成
-  const supabase = createClient();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="container mx-auto px-4 py-16 max-w-4xl">
@@ -202,7 +198,6 @@ export default async function HomePage() {
           </Link>
         </div>
       </div>
-      {/* <DebugPanel data={debugData} /> */}
     </div>
   );
 }
